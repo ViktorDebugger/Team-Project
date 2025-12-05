@@ -41,8 +41,14 @@ export function FavoritesModal({ isOpen, onClose }: FavoritesModalProps) {
     selectTeacher,
   } = useSchedule();
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
-  const [savedGroups] = useLocalStorage<string[]>(SAVED_GROUPS_KEY, []);
-  const [savedTeachers] = useLocalStorage<string[]>(SAVED_TEACHERS_KEY, []);
+  const [savedGroups, setSavedGroups] = useLocalStorage<string[]>(
+    SAVED_GROUPS_KEY,
+    []
+  );
+  const [savedTeachers, setSavedTeachers] = useLocalStorage<string[]>(
+    SAVED_TEACHERS_KEY,
+    []
+  );
   const [notifications, setNotifications] = useLocalStorage<
     Record<string, boolean>
   >(NOTIFICATIONS_KEY, {});
