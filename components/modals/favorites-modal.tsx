@@ -81,16 +81,8 @@ export function FavoritesModal({ isOpen, onClose }: FavoritesModalProps) {
     const itemKey = `${item.type}-${item.name}`;
 
     if (item.type === 'group') {
-      const [, setSavedGroups] = useLocalStorage<string[]>(
-        SAVED_GROUPS_KEY,
-        []
-      );
       setSavedGroups(savedGroups.filter((g) => g !== item.name));
     } else {
-      const [, setSavedTeachers] = useLocalStorage<string[]>(
-        SAVED_TEACHERS_KEY,
-        []
-      );
       setSavedTeachers(savedTeachers.filter((t) => t !== item.name));
     }
 
