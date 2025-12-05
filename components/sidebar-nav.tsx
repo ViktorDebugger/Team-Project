@@ -4,6 +4,7 @@ import { UserButton } from './user-button';
 import { ViewModeButton, ViewMode } from './view-mode-button';
 import { SearchButton } from './search-button';
 import { FavoritesButton } from './favorites-button';
+import { MakeupClassButton } from './makeup-class-button';
 import { UserData } from './auth-form';
 
 /** Color option type */
@@ -25,6 +26,8 @@ interface SidebarNavProps {
   isSearchOpen: boolean;
   onFavoritesClick: () => void;
   isFavoritesOpen: boolean;
+  onMakeupClassClick?: () => void;
+  isMakeupClassOpen?: boolean;
 }
 
 /**
@@ -44,7 +47,11 @@ export function SidebarNav({
   isSearchOpen,
   onFavoritesClick,
   isFavoritesOpen,
+  onMakeupClassClick,
+  isMakeupClassOpen,
 }: SidebarNavProps) {
+  const isTeacher = user.role === 'teacher';
+
   return (
     <nav className="flex flex-col gap-2 p-2 bg-card rounded-xl border shadow-sm">
       <UserButton
@@ -57,6 +64,12 @@ export function SidebarNav({
       <ViewModeButton viewMode={viewMode} onViewModeChange={onViewModeChange} />
       <SearchButton onClick={onSearchClick} isActive={isSearchOpen} />
       <FavoritesButton onClick={onFavoritesClick} isActive={isFavoritesOpen} />
+      {isTeacher && onMakeupClassClick && (
+        <MakeupClassButton
+          onClick={onMakeupClassClick}
+          isActive={isMakeupClassOpen || false}
+        />
+      )}
     </nav>
   );
 }

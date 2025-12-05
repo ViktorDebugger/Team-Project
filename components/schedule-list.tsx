@@ -8,6 +8,7 @@ import {
   Video,
   ExternalLink,
   UserCheck,
+  Plus,
 } from 'lucide-react';
 import scheduleData from '@/data/schedule.json';
 import examsData from '@/data/exams.json';
@@ -26,6 +27,7 @@ import {
   SubstitutedClass,
   SUBSTITUTED_CLASSES_KEY,
 } from './substitute-modal';
+import { MakeupClass, MAKEUP_CLASSES_KEY } from './makeup-class-modal';
 
 /** Schedule item type */
 interface ScheduleItem {
@@ -85,6 +87,8 @@ interface ScheduleListProps {
   classTypeFilter?: string;
   /** Name of the logged-in teacher (if user is a teacher) - enables cancel buttons on their classes */
   currentTeacherName?: string;
+  /** Currently selected group for filtering makeup classes */
+  selectedGroup?: string;
 }
 
 /**
@@ -174,6 +178,7 @@ export function ScheduleList({
   scheduleType = 'classes',
   classTypeFilter,
   currentTeacherName,
+  selectedGroup,
 }: ScheduleListProps) {
   const data = scheduleData as ScheduleData;
   const exams = examsData as ExamItem[];
@@ -185,6 +190,7 @@ export function ScheduleList({
   const [substitutedClasses, setSubstitutedClasses] = useState<
     SubstitutedClass[]
   >([]);
+  const [makeupClasses, setMakeupClasses] = useState<MakeupClass[]>([]);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [onlineModalOpen, setOnlineModalOpen] = useState(false);
   const [substituteModalOpen, setSubstituteModalOpen] = useState(false);
@@ -195,7 +201,7 @@ export function ScheduleList({
     time: string;
   } | null>(null);
 
-  // Load cancelled, online, and substituted classes from localStorage
+  // Load cancelled, online, substituted, and makeup classes from localStorage
   useEffect(() => {
     const loadData = () => {
       const savedCancelled = localStorage.getItem(CANCELLED_CLASSES_KEY);
@@ -209,6 +215,10 @@ export function ScheduleList({
       const savedSubstituted = localStorage.getItem(SUBSTITUTED_CLASSES_KEY);
       if (savedSubstituted) {
         setSubstitutedClasses(JSON.parse(savedSubstituted));
+      }
+      const savedMakeup = localStorage.getItem(MAKEUP_CLASSES_KEY);
+      if (savedMakeup) {
+        setMakeupClasses(JSON.parse(savedMakeup));
       }
     };
     loadData();
@@ -672,6 +682,135 @@ export function ScheduleList({
     );
   };
 
+  /**
+   * Gets makeup classes for a specific day filtered by group or teacher.
+   */
+  const getMakeupClassesForDay = (dayKey: string): MakeupClass[] => {
+    return makeupClasses.filter((makeup) => {
+      if (makeup.day !== dayKey) return false;
+
+      // Filter by subject if provided
+      if (
+        subjectFilter &&
+        !makeup.subject.toLowerCase().includes(subjectFilter.toLowerCase())
+      ) {
+        return false;
+      }
+
+      // Filter by class type if provided
+      if (classTypeFilter && makeup.type !== classTypeFilter) {
+        return false;
+      }
+
+      // If viewing a teacher's schedule, show their makeup classes
+      if (teacherFilter) {
+        return makeup.teacher === teacherFilter;
+      }
+
+      // If viewing a group's schedule, show makeup classes for that group
+      if (selectedGroup) {
+        return makeup.groups.includes(selectedGroup);
+      }
+
+      return true;
+    });
+  };
+
+  /**
+   * Renders a makeup class item.
+   */
+  const renderMakeupClassItem = (makeup: MakeupClass) => {
+    const classTime = CLASS_TIMES.find((c) => c.number === makeup.classNumber);
+
+    return (
+      <div
+        key={makeup.id}
+        className="bg-lime-50 rounded-xl border border-lime-400 shadow-sm p-4 relative"
+      >
+        {/* Makeup badge */}
+        <div className="absolute -top-2 -right-2 bg-lime-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+          <Plus size={12} />
+          Відпрацювання
+        </div>
+
+        {/* Online badge if applicable */}
+        {makeup.isOnline && (
+          <div className="absolute -top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+            <Video size={12} />
+            Онлайн
+          </div>
+        )}
+
+        <div className="flex justify-between items-start mb-2">
+          <span className="text-sm font-medium text-muted-foreground">
+            {makeup.classNumber} Пара
+          </span>
+          <span className="text-sm text-muted-foreground">
+            {classTime?.time.replace('-', '-')}
+          </span>
+        </div>
+
+        <h3 className="text-lg font-semibold mb-2">{makeup.subject}</h3>
+
+        {/* Message if provided */}
+        {makeup.message && (
+          <div className="mb-3 p-2 bg-muted rounded-lg">
+            <p className="text-sm text-muted-foreground">{makeup.message}</p>
+          </div>
+        )}
+
+        {/* Online link if applicable */}
+        {makeup.isOnline && makeup.meetLink && (
+          <div className="mb-3 p-2 bg-primary/10 rounded-lg">
+            <a
+              href={makeup.meetLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-primary hover:underline"
+            >
+              <ExternalLink size={14} />
+              <span className="text-sm font-medium">
+                Приєднатися до Google Meet
+              </span>
+            </a>
+          </div>
+        )}
+
+        <div className="flex justify-between items-end">
+          <div className="text-muted-foreground">
+            {teacherFilter ? (
+              <div className="flex flex-col gap-0.5">
+                <span className="font-medium text-foreground">
+                  {makeup.groups.join(', ')}
+                </span>
+              </div>
+            ) : (
+              makeup.teacher
+            )}
+          </div>
+          <div className="text-right">
+            <div className="text-sm font-medium">{makeup.type}</div>
+            <div className="text-sm text-muted-foreground">
+              {makeup.isOnline ? 'Онлайн' : makeup.room}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Class times for reference
+  const CLASS_TIMES = [
+    { number: 1, time: '8:30-9:50' },
+    { number: 2, time: '10:05-11:25' },
+    { number: 3, time: '11:40-13:00' },
+    { number: 4, time: '13:30-14:50' },
+    { number: 5, time: '15:05-16:25' },
+    { number: 6, time: '16:40-18:00' },
+    { number: 7, time: '18:15-19:35' },
+    { number: 8, time: '19:50-21:10' },
+  ];
+
   // Render classes schedule
   const renderDaySchedule = (dayKey: string, items: ScheduleItem[]) => {
     const filteredSchedule = filterSchedule(
@@ -683,9 +822,29 @@ export function ScheduleList({
       classTypeFilter
     );
 
-    if (filteredSchedule.length === 0) {
+    const dayMakeupClasses = getMakeupClassesForDay(dayKey);
+
+    if (filteredSchedule.length === 0 && dayMakeupClasses.length === 0) {
       return null;
     }
+
+    // Combine and sort by class number
+    type CombinedItem =
+      | { type: 'regular'; data: ScheduleItem; number: number }
+      | { type: 'makeup'; data: MakeupClass; number: number };
+
+    const combinedItems: CombinedItem[] = [
+      ...filteredSchedule.map((item) => ({
+        type: 'regular' as const,
+        data: item,
+        number: item.number,
+      })),
+      ...dayMakeupClasses.map((makeup) => ({
+        type: 'makeup' as const,
+        data: makeup,
+        number: makeup.classNumber,
+      })),
+    ].sort((a, b) => a.number - b.number);
 
     return (
       <div key={dayKey} className="space-y-3">
@@ -694,7 +853,11 @@ export function ScheduleList({
             {DAY_NAMES[dayKey]}
           </h2>
         )}
-        {filteredSchedule.map((item) => renderClassItem(item, dayKey))}
+        {combinedItems.map((item) =>
+          item.type === 'regular'
+            ? renderClassItem(item.data, dayKey)
+            : renderMakeupClassItem(item.data)
+        )}
       </div>
     );
   };
@@ -767,13 +930,36 @@ export function ScheduleList({
     teacherFilter,
     classTypeFilter
   );
+  const currentDayMakeupClasses = getMakeupClassesForDay(currentDay);
+
+  // Combine and sort by class number for single day view
+  type CombinedItemSingle =
+    | { type: 'regular'; data: ScheduleItem; number: number }
+    | { type: 'makeup'; data: MakeupClass; number: number };
+
+  const combinedCurrentDay: CombinedItemSingle[] = [
+    ...filteredSchedule.map((item) => ({
+      type: 'regular' as const,
+      data: item,
+      number: item.number,
+    })),
+    ...currentDayMakeupClasses.map((makeup) => ({
+      type: 'makeup' as const,
+      data: makeup,
+      number: makeup.classNumber,
+    })),
+  ].sort((a, b) => a.number - b.number);
 
   return (
     <>
       <div className="w-full max-w-3xl space-y-3">
-        {filteredSchedule.map((item) => renderClassItem(item, currentDay))}
+        {combinedCurrentDay.map((item) =>
+          item.type === 'regular'
+            ? renderClassItem(item.data, currentDay)
+            : renderMakeupClassItem(item.data)
+        )}
 
-        {filteredSchedule.length === 0 && (
+        {combinedCurrentDay.length === 0 && (
           <div className="bg-card rounded-xl border shadow-sm p-8 text-center">
             <p className="text-muted-foreground">
               {subjectFilter

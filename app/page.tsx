@@ -9,6 +9,7 @@ import { ScheduleList } from '@/components/schedule-list';
 import { ToggleGroup } from '@/components/toggle-group';
 import { SearchModal } from '@/components/search-modal';
 import { FavoritesModal } from '@/components/favorites-modal';
+import { MakeupClassModal } from '@/components/makeup-class-modal';
 import { UserData, USER_KEY } from '@/components/auth-form';
 import { ViewMode } from '@/components/view-mode-button';
 
@@ -103,8 +104,10 @@ export default function Home() {
   const [scheduleMode, setScheduleMode] = useState<ScheduleMode>('group');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
+  const [isMakeupClassOpen, setIsMakeupClassOpen] = useState(false);
   const [subjectSearch, setSubjectSearch] = useState('');
   const [classType, setClassType] = useState('all');
+  const [makeupClassRefreshKey, setMakeupClassRefreshKey] = useState(0);
 
   // Check authentication and load settings from localStorage on mount
   useEffect(() => {
@@ -193,7 +196,7 @@ export default function Home() {
   // Show loading spinner while checking auth
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-100 to-purple-100">
         <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
       </div>
     );
@@ -309,6 +312,7 @@ export default function Home() {
           {/* Schedule list */}
           <main className="flex justify-center px-4 pb-8">
             <ScheduleList
+              key={makeupClassRefreshKey}
               day={selectedDay}
               subgroup={scheduleMode === 'group' ? subgroup : undefined}
               weekType={weekType}
@@ -322,6 +326,7 @@ export default function Home() {
               currentTeacherName={
                 user.role === 'teacher' ? user.name : undefined
               }
+              selectedGroup={selectedGroup}
             />
           </main>
         </>
@@ -341,6 +346,8 @@ export default function Home() {
           isSearchOpen={isSearchOpen}
           onFavoritesClick={() => setIsFavoritesOpen(true)}
           isFavoritesOpen={isFavoritesOpen}
+          onMakeupClassClick={() => setIsMakeupClassOpen(true)}
+          isMakeupClassOpen={isMakeupClassOpen}
         />
       </div>
 
@@ -364,6 +371,16 @@ export default function Home() {
         onGroupSelect={handleGroupSelect}
         onTeacherSelect={handleTeacherSelect}
       />
+
+      {/* Makeup class modal - only for teachers */}
+      {user.role === 'teacher' && (
+        <MakeupClassModal
+          isOpen={isMakeupClassOpen}
+          onClose={() => setIsMakeupClassOpen(false)}
+          teacherName={user.name}
+          onCreated={() => setMakeupClassRefreshKey((k) => k + 1)}
+        />
+      )}
     </div>
   );
 }
