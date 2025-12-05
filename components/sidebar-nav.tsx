@@ -2,10 +2,9 @@
 
 import { UserButton } from './user-button';
 import { ColorButton } from './color-button';
-import { ListButton } from './list-button';
+import { ViewModeButton, ViewMode } from './view-mode-button';
 import { SearchButton } from './search-button';
 import { FavoritesButton } from './favorites-button';
-import { ScheduleTypeButton } from './schedule-type-button';
 import { UserData } from './auth-form';
 
 /** Color option type */
@@ -14,12 +13,6 @@ interface ColorOption {
   value: string;
   hex: string;
 }
-
-/** View mode type */
-type ViewMode = 'tabs' | 'list';
-
-/** Schedule type */
-type ScheduleType = 'classes' | 'exams';
 
 interface SidebarNavProps {
   user: UserData;
@@ -33,8 +26,6 @@ interface SidebarNavProps {
   isSearchOpen: boolean;
   onFavoritesClick: () => void;
   isFavoritesOpen: boolean;
-  scheduleType: ScheduleType;
-  onScheduleTypeChange: (type: ScheduleType) => void;
 }
 
 /**
@@ -54,8 +45,6 @@ export function SidebarNav({
   isSearchOpen,
   onFavoritesClick,
   isFavoritesOpen,
-  scheduleType,
-  onScheduleTypeChange,
 }: SidebarNavProps) {
   return (
     <nav className="flex flex-col gap-2 p-2 bg-card rounded-xl border shadow-sm">
@@ -65,11 +54,7 @@ export function SidebarNav({
         currentColor={currentColor}
         onColorChange={onColorChange}
       />
-      <ListButton viewMode={viewMode} onViewModeChange={onViewModeChange} />
-      <ScheduleTypeButton
-        scheduleType={scheduleType}
-        onScheduleTypeChange={onScheduleTypeChange}
-      />
+      <ViewModeButton viewMode={viewMode} onViewModeChange={onViewModeChange} />
       <SearchButton onClick={onSearchClick} isActive={isSearchOpen} />
       <FavoritesButton onClick={onFavoritesClick} isActive={isFavoritesOpen} />
     </nav>

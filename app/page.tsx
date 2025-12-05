@@ -10,6 +10,7 @@ import { ToggleGroup } from '@/components/toggle-group';
 import { SearchModal } from '@/components/search-modal';
 import { FavoritesModal } from '@/components/favorites-modal';
 import { UserData, USER_KEY } from '@/components/auth-form';
+import { ViewMode } from '@/components/view-mode-button';
 
 /** localStorage key for background color */
 const BG_COLOR_KEY = 'bgColor';
@@ -23,8 +24,8 @@ const SCHEDULE_MODE_KEY = 'scheduleMode';
 /** localStorage key for selected teacher */
 const TEACHER_KEY = 'selectedTeacher';
 
-/** localStorage key for schedule type */
-const SCHEDULE_TYPE_KEY = 'scheduleType';
+/** localStorage key for view mode */
+const VIEW_MODE_KEY = 'viewMode';
 
 /** Default background color */
 const DEFAULT_COLOR = 'bg-blue-200';
@@ -34,9 +35,6 @@ const DEFAULT_GROUP = 'ОІ-35';
 
 /** Schedule mode type */
 type ScheduleMode = 'group' | 'teacher';
-
-/** Schedule type */
-type ScheduleType = 'classes' | 'exams';
 
 /** Available background color options */
 const COLORS = [
@@ -99,14 +97,13 @@ export default function Home() {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [bgColor, setBgColor] = useState(DEFAULT_COLOR);
-  const [viewMode, setViewMode] = useState<'tabs' | 'list'>('tabs');
+  const [viewMode, setViewMode] = useState<ViewMode>('classes-tabs');
   const [selectedDay, setSelectedDay] = useState(getCurrentDay);
   const [subgroup, setSubgroup] = useState('1');
   const [weekType, setWeekType] = useState('numerator');
   const [selectedGroup, setSelectedGroup] = useState(DEFAULT_GROUP);
   const [selectedTeacher, setSelectedTeacher] = useState('');
   const [scheduleMode, setScheduleMode] = useState<ScheduleMode>('group');
-  const [scheduleType, setScheduleType] = useState<ScheduleType>('classes');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [subjectSearch, setSubjectSearch] = useState('');
@@ -140,11 +137,9 @@ export default function Home() {
     if (savedTeacher) {
       setSelectedTeacher(savedTeacher);
     }
-    const savedScheduleType = localStorage.getItem(
-      SCHEDULE_TYPE_KEY
-    ) as ScheduleType;
-    if (savedScheduleType) {
-      setScheduleType(savedScheduleType);
+    const savedViewMode = localStorage.getItem(VIEW_MODE_KEY) as ViewMode;
+    if (savedViewMode) {
+      setViewMode(savedViewMode);
     }
 
     setIsLoading(false);
@@ -190,12 +185,12 @@ export default function Home() {
   };
 
   /**
-   * Handles schedule type change and saves to localStorage.
-   * @param {ScheduleType} type - The schedule type
+   * Handles view mode change and saves to localStorage.
+   * @param {ViewMode} mode - The view mode
    */
-  const handleScheduleTypeChange = (type: ScheduleType) => {
-    setScheduleType(type);
-    localStorage.setItem(SCHEDULE_TYPE_KEY, type);
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    localStorage.setItem(VIEW_MODE_KEY, mode);
   };
 
   // Show loading spinner while checking auth
@@ -211,12 +206,17 @@ export default function Home() {
   const displayName =
     scheduleMode === 'group' ? selectedGroup : selectedTeacher;
 
+  /** Derived states from viewMode */
+  const isExams = viewMode === 'exams';
+  const showTabs = viewMode === 'classes-tabs';
+  const showAllDays = viewMode === 'classes-list' || viewMode === 'exams';
+
   return (
     <div
       className={`relative w-full min-h-screen transition-colors duration-300 ${bgColor}`}
     >
-      {/* Header with weekday tabs (only in tabs view mode and classes schedule) */}
-      {viewMode === 'tabs' && scheduleType === 'classes' && (
+      {/* Header with weekday tabs (only in classes-tabs mode) */}
+      {showTabs && (
         <header className="flex justify-center pt-6">
           <WeekdayTabs selectedDay={selectedDay} onDayChange={setSelectedDay} />
         </header>
@@ -228,15 +228,15 @@ export default function Home() {
           {scheduleMode === 'group' ? 'Група' : 'Викладач'}
         </span>
         <h1 className="text-xl font-semibold">{displayName}</h1>
-        {scheduleType === 'exams' && (
+        {isExams && (
           <span className="text-sm font-medium text-primary mt-1">
             Розклад екзаменів
           </span>
         )}
       </div>
 
-      {/* Filters - hide subgroup for teachers, hide week type for exams */}
-      {scheduleType === 'classes' && (
+      {/* Filters - only for classes */}
+      {!isExams && (
         <div className="flex flex-wrap justify-center gap-2 px-4 pt-6 pb-4">
           {scheduleMode === 'group' && (
             <ToggleGroup
@@ -267,11 +267,7 @@ export default function Home() {
           />
           <input
             type="text"
-            placeholder={
-              scheduleType === 'classes'
-                ? 'Пошук дисципліни...'
-                : 'Пошук екзамену...'
-            }
+            placeholder={isExams ? 'Пошук екзамену...' : 'Пошук дисципліни...'}
             value={subjectSearch}
             onChange={(e) => setSubjectSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2 rounded-xl border bg-card shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -285,12 +281,12 @@ export default function Home() {
           day={selectedDay}
           subgroup={scheduleMode === 'group' ? subgroup : undefined}
           weekType={weekType}
-          showAllDays={viewMode === 'list'}
+          showAllDays={showAllDays}
           subjectFilter={subjectSearch}
           teacherFilter={
             scheduleMode === 'teacher' ? selectedTeacher : undefined
           }
-          scheduleType={scheduleType}
+          scheduleType={isExams ? 'exams' : 'classes'}
           classTypeFilter={classType !== 'all' ? classType : undefined}
         />
       </main>
@@ -304,13 +300,11 @@ export default function Home() {
           currentColor={bgColor}
           onColorChange={handleColorChange}
           viewMode={viewMode}
-          onViewModeChange={setViewMode}
+          onViewModeChange={handleViewModeChange}
           onSearchClick={() => setIsSearchOpen(true)}
           isSearchOpen={isSearchOpen}
           onFavoritesClick={() => setIsFavoritesOpen(true)}
           isFavoritesOpen={isFavoritesOpen}
-          scheduleType={scheduleType}
-          onScheduleTypeChange={handleScheduleTypeChange}
         />
       </div>
 
