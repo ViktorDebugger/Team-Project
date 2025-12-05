@@ -34,11 +34,11 @@ function GoogleIcon({ className }: { className?: string }) {
 const DEMO_USERS = {
   student: {
     name: 'Лука В.Ю',
-    email: 'student@lpnu.ua',
+    email: 'firstname.lastname.oi.2023@lpnu.ua',
   },
   teacher: {
     name: 'Петренко О.І',
-    email: 'teacher@lpnu.ua',
+    email: 'firstname.m.lastname@lpnu.ua',
   },
 };
 
