@@ -31,7 +31,7 @@ const GROUPS = [
 
 /** Mock teachers data */
 const TEACHERS = [
-  'Сікора Л.С',
+  'Ковальчук А.М',
   'Петренко О.І',
   'Коваль М.П',
   'Шевченко Н.В',

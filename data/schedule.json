@@ -7,10 +7,11 @@
       "timeEnd": "9:50",
       "subject": "Прикладне програмування",
       "type": "Лекція",
-      "teacher": "Сікора Л.С",
+      "teacher": "Ковальчук А.М",
       "room": "114 I н.к",
       "subgroup": null,
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35", "ОІ-34", "ОІ-33"]
     },
     {
       "id": "mon-2",
@@ -22,7 +23,8 @@
       "teacher": "Петренко О.І",
       "room": "305 V н.к",
       "subgroup": "1",
-      "weekType": "numerator"
+      "weekType": "numerator",
+      "groups": ["ОІ-35"]
     },
     {
       "id": "mon-2b",
@@ -34,7 +36,8 @@
       "teacher": "Савчук Т.М",
       "room": "306 V н.к",
       "subgroup": "2",
-      "weekType": "numerator"
+      "weekType": "numerator",
+      "groups": ["ОІ-35"]
     },
     {
       "id": "mon-3",
@@ -46,7 +49,8 @@
       "teacher": "Коваль М.П",
       "room": "210 III н.к",
       "subgroup": "1",
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35"]
     },
     {
       "id": "mon-3b",
@@ -58,7 +62,8 @@
       "teacher": "Коваль М.П",
       "room": "211 III н.к",
       "subgroup": "2",
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35"]
     },
     {
       "id": "mon-4",
@@ -70,7 +75,8 @@
       "teacher": "Грищенко В.В",
       "room": "101 I н.к",
       "subgroup": null,
-      "weekType": "denominator"
+      "weekType": "denominator",
+      "groups": ["ОІ-35", "ОІ-34"]
     },
     {
       "id": "mon-5",
@@ -82,7 +88,8 @@
       "teacher": "Бойко А.А",
       "room": "Спортзал",
       "subgroup": null,
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35"]
     }
   ],
   "tuesday": [
@@ -96,7 +103,8 @@
       "teacher": "Шевченко Н.В",
       "room": "115 II н.к",
       "subgroup": "1",
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35"]
     },
     {
       "id": "tue-1b",
@@ -108,7 +116,8 @@
       "teacher": "Литвин О.М",
       "room": "116 II н.к",
       "subgroup": "2",
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35"]
     },
     {
       "id": "tue-2",
@@ -120,7 +129,8 @@
       "teacher": "Бондар А.С",
       "room": "401 IV н.к",
       "subgroup": null,
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35", "ОІ-34"]
     },
     {
       "id": "tue-3",
@@ -132,7 +142,8 @@
       "teacher": "Бондар А.С",
       "room": "310 V н.к",
       "subgroup": "1",
-      "weekType": "numerator"
+      "weekType": "numerator",
+      "groups": ["ОІ-35"]
     },
     {
       "id": "tue-3b",
@@ -144,7 +155,8 @@
       "teacher": "Бондар А.С",
       "room": "311 V н.к",
       "subgroup": "2",
-      "weekType": "numerator"
+      "weekType": "numerator",
+      "groups": ["ОІ-35"]
     },
     {
       "id": "tue-4",
@@ -156,7 +168,8 @@
       "teacher": "Мельник І.О",
       "room": "220 I н.к",
       "subgroup": null,
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35"]
     },
     {
       "id": "tue-5",
@@ -168,7 +181,8 @@
       "teacher": "Мельник І.О",
       "room": "221 I н.к",
       "subgroup": null,
-      "weekType": "denominator"
+      "weekType": "denominator",
+      "groups": ["ОІ-35"]
     }
   ],
   "wednesday": [
@@ -182,7 +196,8 @@
       "teacher": "Іванов С.С",
       "room": "101 II н.к",
       "subgroup": null,
-      "weekType": "numerator"
+      "weekType": "numerator",
+      "groups": ["ОІ-35", "ОІ-34", "ОІ-33"]
     },
     {
       "id": "wed-2",
@@ -194,7 +209,8 @@
       "teacher": "Петренко О.І",
       "room": "220 I н.к",
       "subgroup": null,
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35", "ОІ-34"]
     },
     {
       "id": "wed-3",
@@ -206,7 +222,8 @@
       "teacher": "Ткачук В.М",
       "room": "401 IV н.к",
       "subgroup": null,
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35", "ОІ-34"]
     },
     {
       "id": "wed-4",
@@ -218,7 +235,8 @@
       "teacher": "Ткачук В.М",
       "room": "308 V н.к",
       "subgroup": "1",
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35"]
     },
     {
       "id": "wed-4b",
@@ -230,7 +248,8 @@
       "teacher": "Ткачук В.М",
       "room": "309 V н.к",
       "subgroup": "2",
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35"]
     },
     {
       "id": "wed-5",
@@ -242,7 +261,8 @@
       "teacher": "Романюк Л.П",
       "room": "102 I н.к",
       "subgroup": null,
-      "weekType": "denominator"
+      "weekType": "denominator",
+      "groups": ["ОІ-35"]
     }
   ],
   "thursday": [
@@ -256,7 +276,8 @@
       "teacher": "Гнатюк Р.П",
       "room": "102 I н.к",
       "subgroup": null,
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35", "ОІ-34"]
     },
     {
       "id": "thu-2",
@@ -268,7 +289,8 @@
       "teacher": "Гнатюк Р.П",
       "room": "315 V н.к",
       "subgroup": "1",
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35"]
     },
     {
       "id": "thu-2b",
@@ -280,7 +302,8 @@
       "teacher": "Гнатюк Р.П",
       "room": "316 V н.к",
       "subgroup": "2",
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35"]
     },
     {
       "id": "thu-3",
@@ -292,7 +315,8 @@
       "teacher": "Савчук Т.М",
       "room": "101 II н.к",
       "subgroup": null,
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35", "ОІ-34"]
     },
     {
       "id": "thu-4",
@@ -304,7 +328,8 @@
       "teacher": "Савчук Т.М",
       "room": "102 II н.к",
       "subgroup": "1",
-      "weekType": "numerator"
+      "weekType": "numerator",
+      "groups": ["ОІ-35"]
     },
     {
       "id": "thu-4b",
@@ -316,7 +341,8 @@
       "teacher": "Петренко О.І",
       "room": "103 II н.к",
       "subgroup": "2",
-      "weekType": "numerator"
+      "weekType": "numerator",
+      "groups": ["ОІ-35"]
     },
     {
       "id": "thu-5",
@@ -328,7 +354,8 @@
       "teacher": "Бойко А.А",
       "room": "Спортзал",
       "subgroup": null,
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35"]
     }
   ],
   "friday": [
@@ -339,10 +366,11 @@
       "timeEnd": "9:50",
       "subject": "Прикладне програмування",
       "type": "Лабораторна",
-      "teacher": "Сікора Л.С",
+      "teacher": "Ковальчук А.М",
       "room": "310 V н.к",
       "subgroup": "1",
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35"]
     },
     {
       "id": "fri-1b",
@@ -351,10 +379,11 @@
       "timeEnd": "9:50",
       "subject": "Прикладне програмування",
       "type": "Лабораторна",
-      "teacher": "Сікора Л.С",
+      "teacher": "Ковальчук А.М",
       "room": "311 V н.к",
       "subgroup": "2",
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35"]
     },
     {
       "id": "fri-2",
@@ -366,7 +395,8 @@
       "teacher": "Коваль М.П",
       "room": "220 I н.к",
       "subgroup": null,
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35", "ОІ-34", "ОІ-33"]
     },
     {
       "id": "fri-3",
@@ -378,7 +408,8 @@
       "teacher": "Данилюк І.В",
       "room": "105 II н.к",
       "subgroup": null,
-      "weekType": "numerator"
+      "weekType": "numerator",
+      "groups": ["ОІ-35"]
     },
     {
       "id": "fri-3b",
@@ -390,7 +421,8 @@
       "teacher": "Іванов С.С",
       "room": "106 II н.к",
       "subgroup": null,
-      "weekType": "denominator"
+      "weekType": "denominator",
+      "groups": ["ОІ-35"]
     },
     {
       "id": "fri-4",
@@ -402,7 +434,8 @@
       "teacher": "Кравчук О.П",
       "room": "401 IV н.к",
       "subgroup": null,
-      "weekType": null
+      "weekType": null,
+      "groups": ["ОІ-35", "ОІ-34"]
     },
     {
       "id": "fri-5",
@@ -414,7 +447,8 @@
       "teacher": "Кравчук О.П",
       "room": "312 V н.к",
       "subgroup": "1",
-      "weekType": "numerator"
+      "weekType": "numerator",
+      "groups": ["ОІ-35"]
     },
     {
       "id": "fri-5b",
@@ -426,7 +460,8 @@
       "teacher": "Кравчук О.П",
       "room": "313 V н.к",
       "subgroup": "2",
-      "weekType": "numerator"
+      "weekType": "numerator",
+      "groups": ["ОІ-35"]
     }
   ]
 }
