@@ -345,6 +345,16 @@ export function ScheduleList({
   };
 
   /**
+   * Deletes a makeup class.
+   */
+  const handleDeleteMakeupClass = (e: React.MouseEvent, makeupId: string) => {
+    e.stopPropagation();
+    const updated = makeupClasses.filter((m) => m.id !== makeupId);
+    setMakeupClasses(updated);
+    localStorage.setItem(MAKEUP_CLASSES_KEY, JSON.stringify(updated));
+  };
+
+  /**
    * Opens the substitute modal for a class.
    */
   const handleSubstituteClick = (
@@ -788,10 +798,23 @@ export function ScheduleList({
               makeup.teacher
             )}
           </div>
-          <div className="text-right">
-            <div className="text-sm font-medium">{makeup.type}</div>
-            <div className="text-sm text-muted-foreground">
-              {makeup.isOnline ? 'Онлайн' : makeup.room}
+          <div className="flex items-end gap-3">
+            {/* Delete button - only for the teacher who created it */}
+            {currentTeacherName && makeup.teacher === currentTeacherName && (
+              <button
+                onClick={(e) => handleDeleteMakeupClass(e, makeup.id)}
+                className="px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors flex items-center gap-1.5 text-sm font-medium"
+                title="Відмінити відпрацювання"
+              >
+                <XCircle size={14} />
+                <span>Відмінити</span>
+              </button>
+            )}
+            <div className="text-right">
+              <div className="text-sm font-medium">{makeup.type}</div>
+              <div className="text-sm text-muted-foreground">
+                {makeup.isOnline ? 'Онлайн' : makeup.room}
+              </div>
             </div>
           </div>
         </div>
