@@ -1,7 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, GraduationCap, Trash2, Bookmark } from 'lucide-react';
+import {
+  Users,
+  GraduationCap,
+  Trash2,
+  Bookmark,
+  Bell,
+  BellOff,
+} from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -12,39 +19,49 @@ import {
 /** localStorage keys */
 const SAVED_GROUPS_KEY = 'savedGroups';
 const SAVED_TEACHERS_KEY = 'savedTeachers';
+const NOTIFICATIONS_KEY = 'notificationsEnabled';
 
 interface FavoriteItem {
   name: string;
   type: 'group' | 'teacher';
 }
 
+/** Schedule mode type */
+type ScheduleMode = 'group' | 'teacher';
+
 interface FavoritesModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentGroup: string;
   currentTeacher: string;
+  scheduleMode: ScheduleMode;
   onGroupSelect: (group: string) => void;
   onTeacherSelect: (teacher: string) => void;
 }
 
 /**
- * Modal for displaying saved groups and teachers.
+ * Modal for displaying saved groups and teachers with notification toggles.
  */
 export function FavoritesModal({
   isOpen,
   onClose,
   currentGroup,
   currentTeacher,
+  scheduleMode,
   onGroupSelect,
   onTeacherSelect,
 }: FavoritesModalProps) {
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+  const [notifications, setNotifications] = useState<Record<string, boolean>>(
+    {}
+  );
 
-  // Load saved items from localStorage
+  // Load saved items and notifications from localStorage
   useEffect(() => {
     if (isOpen) {
       const groups = localStorage.getItem(SAVED_GROUPS_KEY);
       const teachers = localStorage.getItem(SAVED_TEACHERS_KEY);
+      const savedNotifications = localStorage.getItem(NOTIFICATIONS_KEY);
 
       const savedGroups: FavoriteItem[] = groups
         ? JSON.parse(groups).map((name: string) => ({
@@ -60,6 +77,9 @@ export function FavoritesModal({
         : [];
 
       setFavorites([...savedGroups, ...savedTeachers]);
+      setNotifications(
+        savedNotifications ? JSON.parse(savedNotifications) : {}
+      );
     }
   }, [isOpen]);
 
@@ -75,6 +95,8 @@ export function FavoritesModal({
   const handleRemove = (e: React.MouseEvent, item: FavoriteItem) => {
     e.stopPropagation();
 
+    const itemKey = `${item.type}-${item.name}`;
+
     if (item.type === 'group') {
       const groups = localStorage.getItem(SAVED_GROUPS_KEY);
       const savedGroups: string[] = groups ? JSON.parse(groups) : [];
@@ -87,9 +109,29 @@ export function FavoritesModal({
       localStorage.setItem(SAVED_TEACHERS_KEY, JSON.stringify(newSaved));
     }
 
+    // Remove notification setting
+    const newNotifications = { ...notifications };
+    delete newNotifications[itemKey];
+    setNotifications(newNotifications);
+    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(newNotifications));
+
     setFavorites(
       favorites.filter((f) => !(f.name === item.name && f.type === item.type))
     );
+  };
+
+  const handleToggleNotification = (
+    e: React.MouseEvent,
+    item: FavoriteItem
+  ) => {
+    e.stopPropagation();
+    const itemKey = `${item.type}-${item.name}`;
+    const newNotifications = {
+      ...notifications,
+      [itemKey]: !notifications[itemKey],
+    };
+    setNotifications(newNotifications);
+    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(newNotifications));
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -99,10 +141,19 @@ export function FavoritesModal({
   };
 
   const isItemActive = (item: FavoriteItem) => {
-    if (item.type === 'group') {
+    // Only highlight if the item type matches the current schedule mode
+    if (item.type === 'group' && scheduleMode === 'group') {
       return currentGroup === item.name;
     }
-    return currentTeacher === item.name;
+    if (item.type === 'teacher' && scheduleMode === 'teacher') {
+      return currentTeacher === item.name;
+    }
+    return false;
+  };
+
+  const isNotificationEnabled = (item: FavoriteItem) => {
+    const itemKey = `${item.type}-${item.name}`;
+    return notifications[itemKey] ?? false;
   };
 
   return (
@@ -158,17 +209,46 @@ export function FavoritesModal({
                     </span>
                   </div>
                 </div>
-                <button
-                  onClick={(e) => handleRemove(e, item)}
-                  className={`p-1 rounded transition-colors ${
-                    isItemActive(item)
-                      ? 'hover:bg-primary-foreground/20 text-primary-foreground'
-                      : 'hover:bg-destructive/10 text-destructive'
-                  }`}
-                  title="Видалити"
-                >
-                  <Trash2 size={16} />
-                </button>
+                <div className="flex items-center gap-2">
+                  {/* Notification toggle - only for groups */}
+                  {item.type === 'group' && (
+                    <button
+                      onClick={(e) => handleToggleNotification(e, item)}
+                      className={`p-1.5 rounded transition-colors ${
+                        isItemActive(item)
+                          ? isNotificationEnabled(item)
+                            ? 'bg-primary-foreground/20 text-primary-foreground'
+                            : 'hover:bg-primary-foreground/10 text-primary-foreground/50'
+                          : isNotificationEnabled(item)
+                            ? 'bg-green-100 text-green-700'
+                            : 'hover:bg-muted text-muted-foreground'
+                      }`}
+                      title={
+                        isNotificationEnabled(item)
+                          ? 'Вимкнути сповіщення'
+                          : 'Увімкнути сповіщення'
+                      }
+                    >
+                      {isNotificationEnabled(item) ? (
+                        <Bell size={16} />
+                      ) : (
+                        <BellOff size={16} />
+                      )}
+                    </button>
+                  )}
+                  {/* Delete button */}
+                  <button
+                    onClick={(e) => handleRemove(e, item)}
+                    className={`p-1.5 rounded transition-colors ${
+                      isItemActive(item)
+                        ? 'hover:bg-primary-foreground/20 text-primary-foreground'
+                        : 'hover:bg-destructive/10 text-destructive'
+                    }`}
+                    title="Видалити"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             ))
           ) : (

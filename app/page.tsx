@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search } from 'lucide-react';
+import { Search, CalendarSearch } from 'lucide-react';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { WeekdayTabs } from '@/components/weekday-tabs';
 import { ScheduleList } from '@/components/schedule-list';
@@ -29,9 +29,6 @@ const VIEW_MODE_KEY = 'viewMode';
 
 /** Default background color */
 const DEFAULT_COLOR = 'bg-blue-200';
-
-/** Default group */
-const DEFAULT_GROUP = 'ОІ-35';
 
 /** Schedule mode type */
 type ScheduleMode = 'group' | 'teacher';
@@ -101,7 +98,7 @@ export default function Home() {
   const [selectedDay, setSelectedDay] = useState(getCurrentDay);
   const [subgroup, setSubgroup] = useState('1');
   const [weekType, setWeekType] = useState('numerator');
-  const [selectedGroup, setSelectedGroup] = useState(DEFAULT_GROUP);
+  const [selectedGroup, setSelectedGroup] = useState('');
   const [selectedTeacher, setSelectedTeacher] = useState('');
   const [scheduleMode, setScheduleMode] = useState<ScheduleMode>('group');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -211,85 +208,121 @@ export default function Home() {
   const showTabs = viewMode === 'classes-tabs';
   const showAllDays = viewMode === 'classes-list' || viewMode === 'exams';
 
+  /** Check if user has no selection yet */
+  const hasNoSelection =
+    (scheduleMode === 'group' && !selectedGroup) ||
+    (scheduleMode === 'teacher' && !selectedTeacher);
+
   return (
     <div
       className={`relative w-full min-h-screen transition-colors duration-300 ${bgColor}`}
     >
-      {/* Header with weekday tabs (only in classes-tabs mode) */}
-      {showTabs && (
-        <header className="flex justify-center pt-6">
-          <WeekdayTabs selectedDay={selectedDay} onDayChange={setSelectedDay} />
-        </header>
-      )}
-
-      {/* Group/Teacher name */}
-      <div className="flex flex-col items-center pt-4 gap-1">
-        <span className="text-xs text-muted-foreground">
-          {scheduleMode === 'group' ? 'Група' : 'Викладач'}
-        </span>
-        <h1 className="text-xl font-semibold">{displayName}</h1>
-        {isExams && (
-          <span className="text-sm font-medium text-primary mt-1">
-            Розклад екзаменів
-          </span>
-        )}
-      </div>
-
-      {/* Filters - only for classes */}
-      {!isExams && (
-        <div className="flex flex-wrap justify-center gap-2 px-4 pt-6 pb-4">
-          {scheduleMode === 'group' && (
-            <ToggleGroup
-              options={SUBGROUP_OPTIONS}
-              value={subgroup}
-              onChange={setSubgroup}
+      {hasNoSelection ? (
+        /* Empty state for new users */
+        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
+          <div className="bg-card rounded-2xl border shadow-lg p-8 max-w-md text-center">
+            <CalendarSearch
+              size={64}
+              className="mx-auto text-primary/50 mb-6"
             />
+            <h2 className="text-2xl font-bold mb-2">Ласкаво просимо!</h2>
+            <p className="text-muted-foreground mb-6">
+              Щоб переглянути розклад, спочатку оберіть свою групу або викладача
+              через пошук.
+            </p>
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
+            >
+              <Search size={18} />
+              <span>Знайти групу або викладача</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Header with weekday tabs (only in classes-tabs mode) */}
+          {showTabs && (
+            <header className="flex justify-center pt-6">
+              <WeekdayTabs
+                selectedDay={selectedDay}
+                onDayChange={setSelectedDay}
+              />
+            </header>
           )}
-          <ToggleGroup
-            options={WEEK_OPTIONS}
-            value={weekType}
-            onChange={setWeekType}
-          />
-          <ToggleGroup
-            options={CLASS_TYPE_OPTIONS}
-            value={classType}
-            onChange={setClassType}
-          />
-        </div>
+
+          {/* Group/Teacher name */}
+          <div className="flex flex-col items-center pt-4 gap-1">
+            <span className="text-xs text-muted-foreground">
+              {scheduleMode === 'group' ? 'Група' : 'Викладач'}
+            </span>
+            <h1 className="text-xl font-semibold">{displayName}</h1>
+            {isExams && (
+              <span className="text-sm font-medium text-primary mt-1">
+                Розклад екзаменів
+              </span>
+            )}
+          </div>
+
+          {/* Filters - only for classes */}
+          {!isExams && (
+            <div className="flex flex-wrap justify-center gap-2 px-4 pt-6 pb-4">
+              {scheduleMode === 'group' && (
+                <ToggleGroup
+                  options={SUBGROUP_OPTIONS}
+                  value={subgroup}
+                  onChange={setSubgroup}
+                />
+              )}
+              <ToggleGroup
+                options={WEEK_OPTIONS}
+                value={weekType}
+                onChange={setWeekType}
+              />
+              <ToggleGroup
+                options={CLASS_TYPE_OPTIONS}
+                value={classType}
+                onChange={setClassType}
+              />
+            </div>
+          )}
+
+          {/* Subject search */}
+          <div className="flex justify-center px-4 pb-4 pt-2">
+            <div className="relative w-full max-w-3xl">
+              <Search
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <input
+                type="text"
+                placeholder={
+                  isExams ? 'Пошук екзамену...' : 'Пошук дисципліни...'
+                }
+                value={subjectSearch}
+                onChange={(e) => setSubjectSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 rounded-xl border bg-card shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+            </div>
+          </div>
+
+          {/* Schedule list */}
+          <main className="flex justify-center px-4 pb-8">
+            <ScheduleList
+              day={selectedDay}
+              subgroup={scheduleMode === 'group' ? subgroup : undefined}
+              weekType={weekType}
+              showAllDays={showAllDays}
+              subjectFilter={subjectSearch}
+              teacherFilter={
+                scheduleMode === 'teacher' ? selectedTeacher : undefined
+              }
+              scheduleType={isExams ? 'exams' : 'classes'}
+              classTypeFilter={classType !== 'all' ? classType : undefined}
+            />
+          </main>
+        </>
       )}
-
-      {/* Subject search */}
-      <div className="flex justify-center px-4 pb-4 pt-2">
-        <div className="relative w-full max-w-3xl">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-          />
-          <input
-            type="text"
-            placeholder={isExams ? 'Пошук екзамену...' : 'Пошук дисципліни...'}
-            value={subjectSearch}
-            onChange={(e) => setSubjectSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-xl border bg-card shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-          />
-        </div>
-      </div>
-
-      {/* Schedule list */}
-      <main className="flex justify-center px-4 pb-8">
-        <ScheduleList
-          day={selectedDay}
-          subgroup={scheduleMode === 'group' ? subgroup : undefined}
-          weekType={weekType}
-          showAllDays={showAllDays}
-          subjectFilter={subjectSearch}
-          teacherFilter={
-            scheduleMode === 'teacher' ? selectedTeacher : undefined
-          }
-          scheduleType={isExams ? 'exams' : 'classes'}
-          classTypeFilter={classType !== 'all' ? classType : undefined}
-        />
-      </main>
 
       {/* Sidebar navigation - absolute positioned on the right */}
       <div className="fixed right-4 top-1/4 -translate-y-1/2">
@@ -324,6 +357,7 @@ export default function Home() {
         onClose={() => setIsFavoritesOpen(false)}
         currentGroup={selectedGroup}
         currentTeacher={selectedTeacher}
+        scheduleMode={scheduleMode}
         onGroupSelect={handleGroupSelect}
         onTeacherSelect={handleTeacherSelect}
       />

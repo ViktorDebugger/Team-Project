@@ -1,7 +1,6 @@
 'use client';
 
 import { UserButton } from './user-button';
-import { ColorButton } from './color-button';
 import { ViewModeButton, ViewMode } from './view-mode-button';
 import { SearchButton } from './search-button';
 import { FavoritesButton } from './favorites-button';
@@ -48,8 +47,9 @@ export function SidebarNav({
 }: SidebarNavProps) {
   return (
     <nav className="flex flex-col gap-2 p-2 bg-card rounded-xl border shadow-sm">
-      <UserButton user={user} onLogout={onLogout} />
-      <ColorButton
+      <UserButton
+        user={user}
+        onLogout={onLogout}
         colors={colors}
         currentColor={currentColor}
         onColorChange={onColorChange}

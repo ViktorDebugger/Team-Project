@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { User, LogOut, Bell, BellOff } from 'lucide-react';
+import { User, LogOut } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,30 +12,41 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { UserData } from './auth-form';
 
+/** Color option type */
+interface ColorOption {
+  name: string;
+  value: string;
+  hex: string;
+}
+
 interface UserButtonProps {
   /** Current user data */
   user: UserData;
   /** Callback when user logs out */
   onLogout: () => void;
+  /** Available color options */
+  colors: ColorOption[];
+  /** Current selected color */
+  currentColor: string;
+  /** Callback when color is selected */
+  onColorChange: (color: string) => void;
 }
 
 /**
- * User account button with dropdown menu.
+ * User account button with dropdown menu and color picker.
  * @param {UserButtonProps} props - Component props
  * @returns {JSX.Element} User button with dropdown
  * @example
- * <UserButton user={user} onLogout={handleLogout} />
+ * <UserButton user={user} onLogout={handleLogout} colors={COLORS} currentColor={bgColor} onColorChange={setBgColor} />
  */
-export function UserButton({ user, onLogout }: UserButtonProps) {
+export function UserButton({
+  user,
+  onLogout,
+  colors,
+  currentColor,
+  onColorChange,
+}: UserButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-
-  /**
-   * Toggles notifications on/off.
-   */
-  const handleToggleNotifications = () => {
-    setNotificationsEnabled((prev) => !prev);
-  };
 
   /**
    * Handles logout.
@@ -68,25 +79,30 @@ export function UserButton({ user, onLogout }: UserButtonProps) {
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="cursor-pointer flex justify-between"
-          onClick={handleToggleNotifications}
-          onSelect={(e) => e.preventDefault()}
-        >
-          <div className="flex items-center gap-2">
-            {notificationsEnabled ? <Bell size={16} /> : <BellOff size={16} />}
-            <span>Сповіщення</span>
+
+        {/* Color picker */}
+        <div className="px-2 py-2">
+          <p className="text-xs font-medium text-muted-foreground mb-2">
+            Кольорова тема
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {colors.map((color) => (
+              <button
+                key={color.name}
+                onClick={() => onColorChange(color.value)}
+                className={`w-7 h-7 rounded-full border-2 transition-all hover:scale-110 ${
+                  currentColor === color.value
+                    ? 'border-primary ring-2 ring-primary/30'
+                    : 'border-border'
+                }`}
+                style={{ backgroundColor: color.hex }}
+                title={color.name}
+                aria-label={`Set background to ${color.name}`}
+              />
+            ))}
           </div>
-          <span
-            className={`text-xs px-2 py-0.5 rounded ${
-              notificationsEnabled
-                ? 'bg-green-100 text-green-700'
-                : 'bg-muted text-muted-foreground'
-            }`}
-          >
-            {notificationsEnabled ? 'Увімк.' : 'Вимк.'}
-          </span>
-        </DropdownMenuItem>
+        </div>
+
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer text-destructive focus:text-destructive"
