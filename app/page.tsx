@@ -36,7 +36,7 @@ const CLASS_TYPE_OPTIONS = [
 
 export default function Home() {
   const router = useRouter();
-  const [user] = useLocalStorage<UserData | null>(USER_KEY, null);
+  const [user, setUser] = useLocalStorage<UserData | null>(USER_KEY, null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
@@ -73,7 +73,6 @@ export default function Home() {
   }, [user, router]);
 
   const handleLogout = () => {
-    const [, setUser] = useLocalStorage<UserData | null>(USER_KEY, null);
     setUser(null);
     router.push('/login');
   };
