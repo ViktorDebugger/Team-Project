@@ -3,19 +3,10 @@
 import { Plus } from 'lucide-react';
 
 interface MakeupClassButtonProps {
-  /** Whether the button is active */
   isActive: boolean;
-  /** Click handler */
   onClick: () => void;
 }
 
-/**
- * Button for opening the makeup class modal.
- * @param {MakeupClassButtonProps} props - Component props
- * @returns {JSX.Element} Makeup class button
- * @example
- * <MakeupClassButton isActive={isModalOpen} onClick={() => setIsModalOpen(true)} />
- */
 export function MakeupClassButton({
   isActive,
   onClick,

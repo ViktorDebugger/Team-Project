@@ -9,11 +9,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { useLocalStorage } from '@/hooks';
 
-/** localStorage key for makeup classes */
 export const MAKEUP_CLASSES_KEY = 'makeupClasses';
 
-/** Makeup class info */
 export interface MakeupClass {
   id: string;
   day: string;
@@ -29,7 +28,6 @@ export interface MakeupClass {
   createdAt: string;
 }
 
-/** Available class times */
 const CLASS_TIMES: { number: number; time: string }[] = [
   { number: 1, time: '8:30-9:50' },
   { number: 2, time: '10:05-11:25' },
@@ -41,7 +39,6 @@ const CLASS_TIMES: { number: number; time: string }[] = [
   { number: 8, time: '19:50-21:10' },
 ];
 
-/** Available days */
 const DAYS = [
   { key: 'monday', label: 'Понеділок' },
   { key: 'tuesday', label: 'Вівторок' },
@@ -50,7 +47,6 @@ const DAYS = [
   { key: 'friday', label: "П'ятниця" },
 ];
 
-/** Available groups */
 const AVAILABLE_GROUPS = [
   'ОІ-31',
   'ОІ-32',
@@ -66,7 +62,6 @@ const AVAILABLE_GROUPS = [
   'ПЗ-33',
 ];
 
-/** Class types */
 const CLASS_TYPES: ('Лекція' | 'Практична' | 'Лабораторна')[] = [
   'Лекція',
   'Практична',
@@ -74,20 +69,12 @@ const CLASS_TYPES: ('Лекція' | 'Практична' | 'Лаборатор�
 ];
 
 interface MakeupClassModalProps {
-  /** Whether the modal is open */
   isOpen: boolean;
-  /** Callback to close the modal */
   onClose: () => void;
-  /** Teacher name */
   teacherName: string;
-  /** Callback after successful creation */
   onCreated: () => void;
 }
 
-/**
- * Generates a pseudo-random Google Meet link.
- * @returns {string} Generated Google Meet link
- */
 function generateMeetLink(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz';
   const segment = () =>
@@ -98,13 +85,6 @@ function generateMeetLink(): string {
   return `https://meet.google.com/${segment()}-${segment()}-${segment()}`;
 }
 
-/**
- * Modal for creating a makeup class.
- * @param {MakeupClassModalProps} props - Component props
- * @returns {JSX.Element} Makeup class modal
- * @example
- * <MakeupClassModal isOpen={isOpen} onClose={onClose} teacherName="Петренко О.І" onCreated={refetch} />
- */
 export function MakeupClassModal({
   isOpen,
   onClose,
@@ -127,16 +107,18 @@ export function MakeupClassModal({
   const [isDayDropdownOpen, setIsDayDropdownOpen] = useState(false);
   const [isClassDropdownOpen, setIsClassDropdownOpen] = useState(false);
   const [groupSearch, setGroupSearch] = useState('');
+  const [makeupClasses, setMakeupClasses] = useLocalStorage<MakeupClass[]>(
+    MAKEUP_CLASSES_KEY,
+    []
+  );
   const groupsDropdownRef = useRef<HTMLDivElement>(null);
   const dayDropdownRef = useRef<HTMLDivElement>(null);
   const classDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Filter groups based on search
   const filteredGroups = AVAILABLE_GROUPS.filter((group) =>
     group.toLowerCase().includes(groupSearch.toLowerCase())
   );
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -163,9 +145,6 @@ export function MakeupClassModal({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  /**
-   * Handles modal close and resets form.
-   */
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       resetForm();
@@ -173,9 +152,6 @@ export function MakeupClassModal({
     }
   };
 
-  /**
-   * Resets form to initial state.
-   */
   const resetForm = () => {
     setDay('monday');
     setClassNumber(1);
@@ -192,9 +168,6 @@ export function MakeupClassModal({
     setIsClassDropdownOpen(false);
   };
 
-  /**
-   * Toggles group selection.
-   */
   const handleToggleGroup = (group: string) => {
     setSelectedGroups((prev) =>
       prev.includes(group) ? prev.filter((g) => g !== group) : [...prev, group]
@@ -202,16 +175,10 @@ export function MakeupClassModal({
     setError('');
   };
 
-  /**
-   * Removes a group from selection.
-   */
   const handleRemoveGroup = (group: string) => {
     setSelectedGroups((prev) => prev.filter((g) => g !== group));
   };
 
-  /**
-   * Handles form submission.
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -233,14 +200,7 @@ export function MakeupClassModal({
 
     setIsLoading(true);
 
-    // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 300));
-
-    // Save to localStorage
-    const existingData = localStorage.getItem(MAKEUP_CLASSES_KEY);
-    const makeupClasses: MakeupClass[] = existingData
-      ? JSON.parse(existingData)
-      : [];
 
     const newMakeupClass: MakeupClass = {
       id: `makeup-${Date.now()}`,
@@ -257,9 +217,7 @@ export function MakeupClassModal({
       createdAt: new Date().toISOString(),
     };
 
-    makeupClasses.push(newMakeupClass);
-
-    localStorage.setItem(MAKEUP_CLASSES_KEY, JSON.stringify(makeupClasses));
+    setMakeupClasses([...makeupClasses, newMakeupClass]);
 
     setIsLoading(false);
     resetForm();
@@ -280,9 +238,7 @@ export function MakeupClassModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Day and time selection */}
           <div className="grid grid-cols-2 gap-3">
-            {/* Day dropdown */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
                 День тижня
@@ -328,7 +284,6 @@ export function MakeupClassModal({
               </div>
             </div>
 
-            {/* Class number dropdown */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
                 Номер пари
@@ -378,7 +333,6 @@ export function MakeupClassModal({
             </div>
           </div>
 
-          {/* Subject name */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
               Назва предмету
@@ -396,11 +350,9 @@ export function MakeupClassModal({
             />
           </div>
 
-          {/* Groups selection */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Групи</label>
             <div className="relative" ref={groupsDropdownRef}>
-              {/* Selected groups */}
               <div
                 className="min-h-[42px] px-3 py-2 rounded-xl border bg-background flex flex-wrap gap-1.5 cursor-pointer"
                 onClick={() => setIsGroupsDropdownOpen(true)}
@@ -437,7 +389,6 @@ export function MakeupClassModal({
                 />
               </div>
 
-              {/* Dropdown */}
               {isGroupsDropdownOpen && (
                 <div className="absolute z-50 w-full mt-1 bg-card border rounded-xl shadow-lg">
                   <div className="p-2 border-b">
@@ -477,7 +428,6 @@ export function MakeupClassModal({
             </div>
           </div>
 
-          {/* Class type */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
               Тип заняття
@@ -501,7 +451,6 @@ export function MakeupClassModal({
             </div>
           </div>
 
-          {/* Online/Offline toggle */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
               Формат проведення
@@ -536,7 +485,6 @@ export function MakeupClassModal({
             </div>
           </div>
 
-          {/* Room (only for offline) */}
           {!isOnline && (
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
@@ -556,7 +504,6 @@ export function MakeupClassModal({
             </div>
           )}
 
-          {/* Online info */}
           {isOnline && (
             <div className="p-3 bg-primary/10 rounded-xl text-sm text-primary">
               <div className="flex items-center gap-2 font-medium">
@@ -566,7 +513,6 @@ export function MakeupClassModal({
             </div>
           )}
 
-          {/* Optional message */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
               Повідомлення для студентів (опціонально)
@@ -581,7 +527,6 @@ export function MakeupClassModal({
             />
           </div>
 
-          {/* Summary */}
           <div className="p-3 bg-muted rounded-xl text-sm space-y-1">
             <div className="font-medium">Підсумок:</div>
             <div className="text-muted-foreground">
@@ -603,7 +548,6 @@ export function MakeupClassModal({
             </div>
           </div>
 
-          {/* Error message */}
           {error && (
             <p className="text-sm text-destructive text-center">{error}</p>
           )}

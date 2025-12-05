@@ -3,10 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { USER_KEY, UserData } from './auth-form';
+import { useLocalStorage } from '@/hooks';
 
-/**
- * Google icon component.
- */
 function GoogleIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" width="18" height="18">
@@ -30,7 +28,6 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-/** Demo user presets */
 const DEMO_USERS = {
   student: {
     name: 'Лука В.Ю',
@@ -43,31 +40,20 @@ const DEMO_USERS = {
 };
 
 interface GoogleButtonProps {
-  /** Text to display on the button */
   text?: string;
 }
 
-/**
- * Google sign-in button component with demo role selector.
- * @param {GoogleButtonProps} props - Component props
- * @returns {JSX.Element} Google button component
- * @example
- * <GoogleButton text="Увійти через Google" />
- */
 export function GoogleButton({
   text = 'Продовжити з Google',
 }: GoogleButtonProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [role, setRole] = useState<'student' | 'teacher'>('student');
+  const [, setUser] = useLocalStorage<UserData | null>(USER_KEY, null);
 
-  /**
-   * Handles Google sign-in.
-   */
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
 
-    // Simulate Google OAuth
     await new Promise((resolve) => setTimeout(resolve, 800));
 
     const demoUser = DEMO_USERS[role];
@@ -77,14 +63,13 @@ export function GoogleButton({
       role,
     };
 
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    setUser(user);
     setIsLoading(false);
     router.push('/');
   };
 
   return (
     <div className="space-y-4">
-      {/* Demo role selector */}
       <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
         <p className="text-xs text-amber-700 font-medium mb-2 text-center">
           🧪 Демо: оберіть роль
@@ -120,7 +105,6 @@ export function GoogleButton({
         </p>
       </div>
 
-      {/* Google sign-in button */}
       <button
         type="button"
         onClick={handleGoogleSignIn}

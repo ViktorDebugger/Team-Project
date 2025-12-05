@@ -10,31 +10,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useMobile, useSchedule } from '@/contexts';
 
-/** Combined view mode type */
-export type ViewMode = 'classes-tabs' | 'classes-list' | 'exams';
-
-interface ViewModeButtonProps {
-  /** Current view mode */
-  viewMode: ViewMode;
-  /** Callback when view mode changes */
-  onViewModeChange: (mode: ViewMode) => void;
-}
-
-/**
- * Button for switching between classes (tabs/list) and exams view.
- * @param {ViewModeButtonProps} props - Component props
- * @returns {JSX.Element} View mode button with dropdown
- * @example
- * <ViewModeButton viewMode={viewMode} onViewModeChange={setViewMode} />
- */
-export function ViewModeButton({
-  viewMode,
-  onViewModeChange,
-}: ViewModeButtonProps) {
+export function ViewModeButton() {
   const [isOpen, setIsOpen] = useState(false);
+  const { isMobile } = useMobile();
+  const { viewMode, setViewMode } = useSchedule();
 
-  /** Get icon based on current view mode */
   const getIcon = () => {
     switch (viewMode) {
       case 'classes-tabs':
@@ -61,11 +43,15 @@ export function ViewModeButton({
           {getIcon()}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="left" align="start" className="w-52">
+      <DropdownMenuContent
+        side={isMobile ? 'top' : 'left'}
+        align={isMobile ? 'center' : 'start'}
+        className="w-52"
+      >
         <DropdownMenuLabel>Режим перегляду</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => onViewModeChange('classes-tabs')}
+          onClick={() => setViewMode('classes-tabs')}
           className={`cursor-pointer gap-2 ${
             viewMode === 'classes-tabs' ? 'bg-muted' : ''
           }`}
@@ -74,7 +60,7 @@ export function ViewModeButton({
           <span>Пари (таби)</span>
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => onViewModeChange('classes-list')}
+          onClick={() => setViewMode('classes-list')}
           className={`cursor-pointer gap-2 ${
             viewMode === 'classes-list' ? 'bg-muted' : ''
           }`}
@@ -84,7 +70,7 @@ export function ViewModeButton({
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => onViewModeChange('exams')}
+          onClick={() => setViewMode('exams')}
           className={`cursor-pointer gap-2 ${
             viewMode === 'exams' ? 'bg-muted' : ''
           }`}

@@ -10,47 +10,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { UserData } from './auth-form';
-
-/** Color option type */
-interface ColorOption {
-  name: string;
-  value: string;
-  hex: string;
-}
+import { UserData } from '../auth';
+import { useMobile, useTheme } from '@/contexts';
 
 interface UserButtonProps {
-  /** Current user data */
   user: UserData;
-  /** Callback when user logs out */
   onLogout: () => void;
-  /** Available color options */
-  colors: ColorOption[];
-  /** Current selected color */
-  currentColor: string;
-  /** Callback when color is selected */
-  onColorChange: (color: string) => void;
 }
 
-/**
- * User account button with dropdown menu and color picker.
- * @param {UserButtonProps} props - Component props
- * @returns {JSX.Element} User button with dropdown
- * @example
- * <UserButton user={user} onLogout={handleLogout} colors={COLORS} currentColor={bgColor} onColorChange={setBgColor} />
- */
-export function UserButton({
-  user,
-  onLogout,
-  colors,
-  currentColor,
-  onColorChange,
-}: UserButtonProps) {
+export function UserButton({ user, onLogout }: UserButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { isMobile } = useMobile();
+  const { bgColor, colors, setBgColor } = useTheme();
 
-  /**
-   * Handles logout.
-   */
   const handleLogout = () => {
     setIsOpen(false);
     onLogout();
@@ -71,7 +43,11 @@ export function UserButton({
           <User size={24} />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="left" align="start" className="w-56">
+      <DropdownMenuContent
+        side={isMobile ? 'top' : 'left'}
+        align={isMobile ? 'center' : 'start'}
+        className="w-56"
+      >
         <DropdownMenuLabel className="flex justify-between">
           <span className="font-semibold">{user.name}</span>
           <span className="text-xs text-muted-foreground italic">
@@ -80,7 +56,6 @@ export function UserButton({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
-        {/* Color picker */}
         <div className="px-2 py-2">
           <p className="text-xs font-medium text-muted-foreground mb-2">
             Кольорова тема
@@ -89,9 +64,9 @@ export function UserButton({
             {colors.map((color) => (
               <button
                 key={color.name}
-                onClick={() => onColorChange(color.value)}
+                onClick={() => setBgColor(color.value)}
                 className={`w-7 h-7 rounded-full border-2 transition-all hover:scale-110 ${
-                  currentColor === color.value
+                  bgColor === color.value
                     ? 'border-primary ring-2 ring-primary/30'
                     : 'border-border'
                 }`}

@@ -3,19 +3,10 @@
 import { Bookmark } from 'lucide-react';
 
 interface FavoritesButtonProps {
-  /** Callback when button is clicked */
   onClick: () => void;
-  /** Whether the button is active (modal is open) */
   isActive?: boolean;
 }
 
-/**
- * Favorites button for opening saved items modal.
- * @param {FavoritesButtonProps} props - Component props
- * @returns {JSX.Element} Favorites button component
- * @example
- * <FavoritesButton onClick={() => setIsFavoritesOpen(true)} isActive={isFavoritesOpen} />
- */
 export function FavoritesButton({
   onClick,
   isActive = false,

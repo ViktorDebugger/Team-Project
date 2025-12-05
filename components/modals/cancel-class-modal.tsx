@@ -9,11 +9,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { useLocalStorage } from '@/hooks';
 
-/** localStorage key for cancelled classes */
 export const CANCELLED_CLASSES_KEY = 'cancelledClasses';
 
-/** Cancelled class info */
 export interface CancelledClass {
   classId: string;
   day: string;
@@ -22,27 +21,14 @@ export interface CancelledClass {
 }
 
 interface CancelClassModalProps {
-  /** Whether the modal is open */
   isOpen: boolean;
-  /** Callback to close the modal */
   onClose: () => void;
-  /** Class ID to cancel */
   classId: string;
-  /** Day of the class */
   day: string;
-  /** Subject name for display */
   subjectName: string;
-  /** Callback after successful cancellation */
   onCancelled: () => void;
 }
 
-/**
- * Modal for cancelling a class with optional message.
- * @param {CancelClassModalProps} props - Component props
- * @returns {JSX.Element} Cancel class modal
- * @example
- * <CancelClassModal isOpen={isOpen} onClose={onClose} classId="1" day="monday" subjectName="Math" onCancelled={refetch} />
- */
 export function CancelClassModal({
   isOpen,
   onClose,
@@ -53,22 +39,15 @@ export function CancelClassModal({
 }: CancelClassModalProps) {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [cancelledClasses, setCancelledClasses] = useLocalStorage<
+    CancelledClass[]
+  >(CANCELLED_CLASSES_KEY, []);
 
-  /**
-   * Handles cancellation submission.
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 300));
-
-    // Save to localStorage
-    const existingData = localStorage.getItem(CANCELLED_CLASSES_KEY);
-    const cancelled: CancelledClass[] = existingData
-      ? JSON.parse(existingData)
-      : [];
 
     const newCancellation: CancelledClass = {
       classId,
@@ -77,18 +56,19 @@ export function CancelClassModal({
       cancelledAt: new Date().toISOString(),
     };
 
-    // Check if already cancelled
-    const existingIndex = cancelled.findIndex(
+    const existingIndex = cancelledClasses.findIndex(
       (c) => c.classId === classId && c.day === day
     );
 
     if (existingIndex >= 0) {
-      cancelled[existingIndex] = newCancellation;
+      setCancelledClasses(
+        cancelledClasses.map((c, i) =>
+          i === existingIndex ? newCancellation : c
+        )
+      );
     } else {
-      cancelled.push(newCancellation);
+      setCancelledClasses([...cancelledClasses, newCancellation]);
     }
-
-    localStorage.setItem(CANCELLED_CLASSES_KEY, JSON.stringify(cancelled));
 
     setIsLoading(false);
     setMessage('');
@@ -96,9 +76,6 @@ export function CancelClassModal({
     onClose();
   };
 
-  /**
-   * Handles modal close.
-   */
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       setMessage('');

@@ -9,11 +9,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { useLocalStorage } from '@/hooks';
 
-/** localStorage key for online classes */
 export const ONLINE_CLASSES_KEY = 'onlineClasses';
 
-/** Online class info */
 export interface OnlineClass {
   classId: string;
   day: string;
@@ -23,25 +22,15 @@ export interface OnlineClass {
 }
 
 interface OnlineClassModalProps {
-  /** Whether the modal is open */
   isOpen: boolean;
-  /** Callback to close the modal */
   onClose: () => void;
-  /** Class ID */
   classId: string;
-  /** Day of the class */
   day: string;
-  /** Subject name for display */
   subjectName: string;
-  /** Class time for display */
   classTime: string;
-  /** Callback after successful update */
   onUpdated: () => void;
 }
 
-/**
- * Generates a mock Google Meet link.
- */
 const generateMeetLink = (): string => {
   const chars = 'abcdefghijklmnopqrstuvwxyz';
   const part1 = Array.from(
@@ -59,13 +48,6 @@ const generateMeetLink = (): string => {
   return `https://meet.google.com/${part1}-${part2}-${part3}`;
 };
 
-/**
- * Modal for moving a class online with Google Meet link.
- * @param {OnlineClassModalProps} props - Component props
- * @returns {JSX.Element} Online class modal
- * @example
- * <OnlineClassModal isOpen={isOpen} onClose={onClose} classId="1" day="monday" subjectName="Math" classTime="8:30-9:50" onUpdated={refetch} />
- */
 export function OnlineClassModal({
   isOpen,
   onClose,
@@ -79,10 +61,11 @@ export function OnlineClassModal({
   const [isLoading, setIsLoading] = useState(false);
   const [meetLink, setMeetLink] = useState('');
   const [isCopied, setIsCopied] = useState(false);
+  const [onlineClasses, setOnlineClasses] = useLocalStorage<OnlineClass[]>(
+    ONLINE_CLASSES_KEY,
+    []
+  );
 
-  /**
-   * Generates a new Meet link when modal opens.
-   */
   const handleOpenChange = (open: boolean) => {
     if (open && !meetLink) {
       setMeetLink(generateMeetLink());
@@ -95,30 +78,17 @@ export function OnlineClassModal({
     }
   };
 
-  /**
-   * Copies the Meet link to clipboard.
-   */
   const handleCopyLink = async () => {
     await navigator.clipboard.writeText(meetLink);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  /**
-   * Handles form submission.
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 300));
-
-    // Save to localStorage
-    const existingData = localStorage.getItem(ONLINE_CLASSES_KEY);
-    const onlineClasses: OnlineClass[] = existingData
-      ? JSON.parse(existingData)
-      : [];
 
     const newOnlineClass: OnlineClass = {
       classId,
@@ -128,18 +98,17 @@ export function OnlineClassModal({
       createdAt: new Date().toISOString(),
     };
 
-    // Check if already exists
     const existingIndex = onlineClasses.findIndex(
       (c) => c.classId === classId && c.day === day
     );
 
     if (existingIndex >= 0) {
-      onlineClasses[existingIndex] = newOnlineClass;
+      setOnlineClasses(
+        onlineClasses.map((c, i) => (i === existingIndex ? newOnlineClass : c))
+      );
     } else {
-      onlineClasses.push(newOnlineClass);
+      setOnlineClasses([...onlineClasses, newOnlineClass]);
     }
-
-    localStorage.setItem(ONLINE_CLASSES_KEY, JSON.stringify(onlineClasses));
 
     setIsLoading(false);
     setMessage('');
@@ -148,7 +117,6 @@ export function OnlineClassModal({
     onClose();
   };
 
-  // Generate link when modal opens
   if (isOpen && !meetLink) {
     setMeetLink(generateMeetLink());
   }
@@ -175,7 +143,6 @@ export function OnlineClassModal({
               буде проведена онлайн.
             </p>
 
-            {/* Generated Meet link */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
                 Посилання на Google Meet
@@ -220,7 +187,6 @@ export function OnlineClassModal({
             </div>
           </div>
 
-          {/* Optional message */}
           <div className="space-y-2">
             <label
               htmlFor="online-message"

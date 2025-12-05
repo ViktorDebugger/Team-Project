@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Users,
   GraduationCap,
@@ -15,8 +15,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useSchedule } from '@/contexts';
+import { useLocalStorage } from '@/hooks';
 
-/** localStorage keys */
 const SAVED_GROUPS_KEY = 'savedGroups';
 const SAVED_TEACHERS_KEY = 'savedTeachers';
 const NOTIFICATIONS_KEY = 'notificationsEnabled';
@@ -26,68 +27,50 @@ interface FavoriteItem {
   type: 'group' | 'teacher';
 }
 
-/** Schedule mode type */
-type ScheduleMode = 'group' | 'teacher';
-
 interface FavoritesModalProps {
   isOpen: boolean;
   onClose: () => void;
-  currentGroup: string;
-  currentTeacher: string;
-  scheduleMode: ScheduleMode;
-  onGroupSelect: (group: string) => void;
-  onTeacherSelect: (teacher: string) => void;
 }
 
-/**
- * Modal for displaying saved groups and teachers with notification toggles.
- */
-export function FavoritesModal({
-  isOpen,
-  onClose,
-  currentGroup,
-  currentTeacher,
-  scheduleMode,
-  onGroupSelect,
-  onTeacherSelect,
-}: FavoritesModalProps) {
+export function FavoritesModal({ isOpen, onClose }: FavoritesModalProps) {
+  const {
+    selectedGroup,
+    selectedTeacher,
+    scheduleMode,
+    selectGroup,
+    selectTeacher,
+  } = useSchedule();
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
-  const [notifications, setNotifications] = useState<Record<string, boolean>>(
-    {}
-  );
+  const [savedGroups] = useLocalStorage<string[]>(SAVED_GROUPS_KEY, []);
+  const [savedTeachers] = useLocalStorage<string[]>(SAVED_TEACHERS_KEY, []);
+  const [notifications, setNotifications] = useLocalStorage<
+    Record<string, boolean>
+  >(NOTIFICATIONS_KEY, {});
 
-  // Load saved items and notifications from localStorage
-  useEffect(() => {
+  useState(() => {
     if (isOpen) {
-      const groups = localStorage.getItem(SAVED_GROUPS_KEY);
-      const teachers = localStorage.getItem(SAVED_TEACHERS_KEY);
-      const savedNotifications = localStorage.getItem(NOTIFICATIONS_KEY);
-
-      const savedGroups: FavoriteItem[] = groups
-        ? JSON.parse(groups).map((name: string) => ({
-            name,
-            type: 'group' as const,
-          }))
-        : [];
-      const savedTeachers: FavoriteItem[] = teachers
-        ? JSON.parse(teachers).map((name: string) => ({
-            name,
-            type: 'teacher' as const,
-          }))
-        : [];
-
-      setFavorites([...savedGroups, ...savedTeachers]);
-      setNotifications(
-        savedNotifications ? JSON.parse(savedNotifications) : {}
+      const savedGroupsItems: FavoriteItem[] = savedGroups.map(
+        (name: string) => ({
+          name,
+          type: 'group' as const,
+        })
       );
+      const savedTeachersItems: FavoriteItem[] = savedTeachers.map(
+        (name: string) => ({
+          name,
+          type: 'teacher' as const,
+        })
+      );
+
+      setFavorites([...savedGroupsItems, ...savedTeachersItems]);
     }
-  }, [isOpen]);
+  });
 
   const handleItemSelect = (item: FavoriteItem) => {
     if (item.type === 'group') {
-      onGroupSelect(item.name);
+      selectGroup(item.name);
     } else {
-      onTeacherSelect(item.name);
+      selectTeacher(item.name);
     }
     onClose();
   };
@@ -98,22 +81,22 @@ export function FavoritesModal({
     const itemKey = `${item.type}-${item.name}`;
 
     if (item.type === 'group') {
-      const groups = localStorage.getItem(SAVED_GROUPS_KEY);
-      const savedGroups: string[] = groups ? JSON.parse(groups) : [];
-      const newSaved = savedGroups.filter((g) => g !== item.name);
-      localStorage.setItem(SAVED_GROUPS_KEY, JSON.stringify(newSaved));
+      const [, setSavedGroups] = useLocalStorage<string[]>(
+        SAVED_GROUPS_KEY,
+        []
+      );
+      setSavedGroups(savedGroups.filter((g) => g !== item.name));
     } else {
-      const teachers = localStorage.getItem(SAVED_TEACHERS_KEY);
-      const savedTeachers: string[] = teachers ? JSON.parse(teachers) : [];
-      const newSaved = savedTeachers.filter((t) => t !== item.name);
-      localStorage.setItem(SAVED_TEACHERS_KEY, JSON.stringify(newSaved));
+      const [, setSavedTeachers] = useLocalStorage<string[]>(
+        SAVED_TEACHERS_KEY,
+        []
+      );
+      setSavedTeachers(savedTeachers.filter((t) => t !== item.name));
     }
 
-    // Remove notification setting
     const newNotifications = { ...notifications };
     delete newNotifications[itemKey];
     setNotifications(newNotifications);
-    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(newNotifications));
 
     setFavorites(
       favorites.filter((f) => !(f.name === item.name && f.type === item.type))
@@ -126,12 +109,10 @@ export function FavoritesModal({
   ) => {
     e.stopPropagation();
     const itemKey = `${item.type}-${item.name}`;
-    const newNotifications = {
+    setNotifications({
       ...notifications,
       [itemKey]: !notifications[itemKey],
-    };
-    setNotifications(newNotifications);
-    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(newNotifications));
+    });
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -141,12 +122,11 @@ export function FavoritesModal({
   };
 
   const isItemActive = (item: FavoriteItem) => {
-    // Only highlight if the item type matches the current schedule mode
     if (item.type === 'group' && scheduleMode === 'group') {
-      return currentGroup === item.name;
+      return selectedGroup === item.name;
     }
     if (item.type === 'teacher' && scheduleMode === 'teacher') {
-      return currentTeacher === item.name;
+      return selectedTeacher === item.name;
     }
     return false;
   };
@@ -163,7 +143,6 @@ export function FavoritesModal({
           <DialogTitle>Збережені</DialogTitle>
         </DialogHeader>
 
-        {/* Items list */}
         <div className="max-h-96 overflow-y-auto space-y-3">
           {favorites.length > 0 ? (
             favorites.map((item) => (
@@ -210,7 +189,6 @@ export function FavoritesModal({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {/* Notification toggle - only for groups */}
                   {item.type === 'group' && (
                     <button
                       onClick={(e) => handleToggleNotification(e, item)}
@@ -236,7 +214,6 @@ export function FavoritesModal({
                       )}
                     </button>
                   )}
-                  {/* Delete button */}
                   <button
                     onClick={(e) => handleRemove(e, item)}
                     className={`p-1.5 rounded transition-colors ${

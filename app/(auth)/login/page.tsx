@@ -1,6 +1,6 @@
 'use client';
 
-import { GoogleButton } from '@/components/google-button';
+import { GoogleButton } from '@/components/auth';
 
 /**
  * Login page component with Google sign-in only.

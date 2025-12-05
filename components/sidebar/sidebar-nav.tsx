@@ -1,27 +1,15 @@
 'use client';
 
 import { UserButton } from './user-button';
-import { ViewModeButton, ViewMode } from './view-mode-button';
+import { ViewModeButton } from './view-mode-button';
 import { SearchButton } from './search-button';
 import { FavoritesButton } from './favorites-button';
 import { MakeupClassButton } from './makeup-class-button';
-import { UserData } from './auth-form';
-
-/** Color option type */
-interface ColorOption {
-  name: string;
-  value: string;
-  hex: string;
-}
+import { UserData } from '../auth';
 
 interface SidebarNavProps {
   user: UserData;
   onLogout: () => void;
-  colors: ColorOption[];
-  currentColor: string;
-  onColorChange: (color: string) => void;
-  viewMode: ViewMode;
-  onViewModeChange: (mode: ViewMode) => void;
   onSearchClick: () => void;
   isSearchOpen: boolean;
   onFavoritesClick: () => void;
@@ -30,19 +18,9 @@ interface SidebarNavProps {
   isMakeupClassOpen?: boolean;
 }
 
-/**
- * Sidebar navigation with dropdown buttons.
- * @param {SidebarNavProps} props - Component props
- * @returns {JSX.Element} Sidebar navigation component
- */
 export function SidebarNav({
   user,
   onLogout,
-  colors,
-  currentColor,
-  onColorChange,
-  viewMode,
-  onViewModeChange,
   onSearchClick,
   isSearchOpen,
   onFavoritesClick,
@@ -53,15 +31,9 @@ export function SidebarNav({
   const isTeacher = user.role === 'teacher';
 
   return (
-    <nav className="flex flex-col gap-2 p-2 bg-card rounded-xl border shadow-sm">
-      <UserButton
-        user={user}
-        onLogout={onLogout}
-        colors={colors}
-        currentColor={currentColor}
-        onColorChange={onColorChange}
-      />
-      <ViewModeButton viewMode={viewMode} onViewModeChange={onViewModeChange} />
+    <nav className="flex flex-row md:flex-col gap-1 sm:gap-2 p-1.5 sm:p-2 bg-card rounded-xl border shadow-sm">
+      <UserButton user={user} onLogout={onLogout} />
+      <ViewModeButton />
       <SearchButton onClick={onSearchClick} isActive={isSearchOpen} />
       <FavoritesButton onClick={onFavoritesClick} isActive={isFavoritesOpen} />
       {isTeacher && onMakeupClassClick && (

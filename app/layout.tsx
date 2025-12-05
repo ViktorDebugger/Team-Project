@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
-import "./globals.css";
-
+import type { Metadata } from 'next';
+import './globals.css';
+import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: "University Schedule",
-  description: "University Schedule is a platform to manage schedule in University.",
+  title: 'University Schedule',
+  description:
+    'University Schedule is a platform to manage schedule in University.',
 };
 
 export default function RootLayout({
@@ -14,10 +15,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className=""
-      >
-        {children}
+      <body>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

@@ -9,11 +9,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { useLocalStorage } from '@/hooks';
 
-/** localStorage key for substituted classes */
 export const SUBSTITUTED_CLASSES_KEY = 'substitutedClasses';
 
-/** Substituted class info */
 export interface SubstitutedClass {
   classId: string;
   day: string;
@@ -22,7 +21,6 @@ export interface SubstitutedClass {
   createdAt: string;
 }
 
-/** Available teachers list */
 const AVAILABLE_TEACHERS = [
   'Петренко О.І',
   'Ковальчук А.М',
@@ -46,27 +44,14 @@ const AVAILABLE_TEACHERS = [
 ];
 
 interface SubstituteModalProps {
-  /** Whether the modal is open */
   isOpen: boolean;
-  /** Callback to close the modal */
   onClose: () => void;
-  /** Class ID */
   classId: string;
-  /** Day of the class */
   day: string;
-  /** Subject name for display */
   subjectName: string;
-  /** Callback after successful update */
   onUpdated: () => void;
 }
 
-/**
- * Modal for assigning a substitute teacher with searchable dropdown.
- * @param {SubstituteModalProps} props - Component props
- * @returns {JSX.Element} Substitute modal
- * @example
- * <SubstituteModal isOpen={isOpen} onClose={onClose} classId="1" day="monday" subjectName="Math" onUpdated={refetch} />
- */
 export function SubstituteModal({
   isOpen,
   onClose,
@@ -80,15 +65,14 @@ export function SubstituteModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [substitutedClasses, setSubstitutedClasses] = useLocalStorage<SubstitutedClass[]>(SUBSTITUTED_CLASSES_KEY, []);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Filter teachers based on input
   const filteredTeachers = AVAILABLE_TEACHERS.filter((teacher) =>
     teacher.toLowerCase().includes(substituteTeacher.toLowerCase())
   );
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -105,9 +89,6 @@ export function SubstituteModal({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  /**
-   * Handles modal close.
-   */
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       setSubstituteTeacher('');
@@ -118,18 +99,12 @@ export function SubstituteModal({
     }
   };
 
-  /**
-   * Handles teacher selection from dropdown.
-   */
   const handleSelectTeacher = (teacher: string) => {
     setSubstituteTeacher(teacher);
     setIsDropdownOpen(false);
     setError('');
   };
 
-  /**
-   * Handles form submission.
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -141,14 +116,7 @@ export function SubstituteModal({
 
     setIsLoading(true);
 
-    // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 300));
-
-    // Save to localStorage
-    const existingData = localStorage.getItem(SUBSTITUTED_CLASSES_KEY);
-    const substitutedClasses: SubstitutedClass[] = existingData
-      ? JSON.parse(existingData)
-      : [];
 
     const newSubstitution: SubstitutedClass = {
       classId,
@@ -158,21 +126,17 @@ export function SubstituteModal({
       createdAt: new Date().toISOString(),
     };
 
-    // Check if already exists
     const existingIndex = substitutedClasses.findIndex(
       (c) => c.classId === classId && c.day === day
     );
 
     if (existingIndex >= 0) {
-      substitutedClasses[existingIndex] = newSubstitution;
+      setSubstitutedClasses(substitutedClasses.map((c, i) =>
+        i === existingIndex ? newSubstitution : c
+      ));
     } else {
-      substitutedClasses.push(newSubstitution);
+      setSubstitutedClasses([...substitutedClasses, newSubstitution]);
     }
-
-    localStorage.setItem(
-      SUBSTITUTED_CLASSES_KEY,
-      JSON.stringify(substitutedClasses)
-    );
 
     setIsLoading(false);
     setSubstituteTeacher('');
@@ -201,7 +165,6 @@ export function SubstituteModal({
               </span>
             </p>
 
-            {/* Substitute teacher searchable dropdown */}
             <div className="space-y-2">
               <label
                 htmlFor="substitute-teacher"
@@ -240,7 +203,6 @@ export function SubstituteModal({
                   </button>
                 </div>
 
-                {/* Dropdown list */}
                 {isDropdownOpen && (
                   <div
                     ref={dropdownRef}
@@ -272,7 +234,6 @@ export function SubstituteModal({
             </div>
           </div>
 
-          {/* Optional message */}
           <div className="space-y-2">
             <label
               htmlFor="substitute-message"
@@ -291,7 +252,6 @@ export function SubstituteModal({
             />
           </div>
 
-          {/* Error message */}
           {error && (
             <p className="text-sm text-destructive text-center">{error}</p>
           )}

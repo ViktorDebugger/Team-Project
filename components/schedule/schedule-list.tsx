@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   XCircle,
   RotateCcw,
@@ -12,24 +12,24 @@ import {
 } from 'lucide-react';
 import scheduleData from '@/data/schedule.json';
 import examsData from '@/data/exams.json';
+import { useLocalStorage } from '@/hooks';
 import {
   CancelClassModal,
   CancelledClass,
   CANCELLED_CLASSES_KEY,
-} from './cancel-class-modal';
+} from '../modals/cancel-class-modal';
 import {
   OnlineClassModal,
   OnlineClass,
   ONLINE_CLASSES_KEY,
-} from './online-class-modal';
+} from '../modals/online-class-modal';
 import {
   SubstituteModal,
   SubstitutedClass,
   SUBSTITUTED_CLASSES_KEY,
-} from './substitute-modal';
-import { MakeupClass, MAKEUP_CLASSES_KEY } from './makeup-class-modal';
+} from '../modals/substitute-modal';
+import { MakeupClass, MAKEUP_CLASSES_KEY } from '../modals/makeup-class-modal';
 
-/** Schedule item type */
 interface ScheduleItem {
   id: string;
   number: number;
@@ -44,7 +44,6 @@ interface ScheduleItem {
   groups?: string[];
 }
 
-/** Exam item type */
 interface ExamItem {
   id: string;
   date: string;
@@ -56,15 +55,12 @@ interface ExamItem {
   room: string;
 }
 
-/** Schedule data type */
 type ScheduleData = {
   [key: string]: ScheduleItem[];
 };
 
-/** Schedule type */
 type ScheduleType = 'classes' | 'exams';
 
-/** Day names in Ukrainian */
 const DAY_NAMES: { [key: string]: string } = {
   monday: 'Понеділок',
   tuesday: 'Вівторок',
@@ -73,7 +69,6 @@ const DAY_NAMES: { [key: string]: string } = {
   friday: "П'ятниця",
 };
 
-/** Days order */
 const DAYS_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
 interface ScheduleListProps {
@@ -85,15 +80,10 @@ interface ScheduleListProps {
   teacherFilter?: string;
   scheduleType?: ScheduleType;
   classTypeFilter?: string;
-  /** Name of the logged-in teacher (if user is a teacher) - enables cancel buttons on their classes */
   currentTeacherName?: string;
-  /** Currently selected group for filtering makeup classes */
   selectedGroup?: string;
 }
 
-/**
- * Filters schedule items by subgroup, weekType, subject, teacher, and class type.
- */
 const filterSchedule = (
   items: ScheduleItem[],
   subgroup?: string,
@@ -130,9 +120,6 @@ const filterSchedule = (
   });
 };
 
-/**
- * Filters exam items by subject and teacher.
- */
 const filterExams = (
   items: ExamItem[],
   subjectFilter?: string,
@@ -152,9 +139,6 @@ const filterExams = (
   });
 };
 
-/**
- * Formats date to Ukrainian format.
- */
 const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
   const options: Intl.DateTimeFormatOptions = {
@@ -165,9 +149,6 @@ const formatDate = (dateStr: string): string => {
   return date.toLocaleDateString('uk-UA', options);
 };
 
-/**
- * Schedule list component displaying classes or exams.
- */
 export function ScheduleList({
   day,
   subgroup,
@@ -183,14 +164,20 @@ export function ScheduleList({
   const data = scheduleData as ScheduleData;
   const exams = examsData as ExamItem[];
 
-  const [cancelledClasses, setCancelledClasses] = useState<CancelledClass[]>(
+  const [cancelledClasses, setCancelledClasses] = useLocalStorage<
+    CancelledClass[]
+  >(CANCELLED_CLASSES_KEY, []);
+  const [onlineClasses, setOnlineClasses] = useLocalStorage<OnlineClass[]>(
+    ONLINE_CLASSES_KEY,
     []
   );
-  const [onlineClasses, setOnlineClasses] = useState<OnlineClass[]>([]);
-  const [substitutedClasses, setSubstitutedClasses] = useState<
+  const [substitutedClasses, setSubstitutedClasses] = useLocalStorage<
     SubstitutedClass[]
-  >([]);
-  const [makeupClasses, setMakeupClasses] = useState<MakeupClass[]>([]);
+  >(SUBSTITUTED_CLASSES_KEY, []);
+  const [makeupClasses, setMakeupClasses] = useLocalStorage<MakeupClass[]>(
+    MAKEUP_CLASSES_KEY,
+    []
+  );
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [onlineModalOpen, setOnlineModalOpen] = useState(false);
   const [substituteModalOpen, setSubstituteModalOpen] = useState(false);
@@ -201,36 +188,6 @@ export function ScheduleList({
     time: string;
   } | null>(null);
 
-  // Load cancelled, online, substituted, and makeup classes from localStorage
-  useEffect(() => {
-    const loadData = () => {
-      const savedCancelled = localStorage.getItem(CANCELLED_CLASSES_KEY);
-      if (savedCancelled) {
-        setCancelledClasses(JSON.parse(savedCancelled));
-      }
-      const savedOnline = localStorage.getItem(ONLINE_CLASSES_KEY);
-      if (savedOnline) {
-        setOnlineClasses(JSON.parse(savedOnline));
-      }
-      const savedSubstituted = localStorage.getItem(SUBSTITUTED_CLASSES_KEY);
-      if (savedSubstituted) {
-        setSubstitutedClasses(JSON.parse(savedSubstituted));
-      }
-      const savedMakeup = localStorage.getItem(MAKEUP_CLASSES_KEY);
-      if (savedMakeup) {
-        setMakeupClasses(JSON.parse(savedMakeup));
-      }
-    };
-    loadData();
-
-    // Listen for storage changes
-    window.addEventListener('storage', loadData);
-    return () => window.removeEventListener('storage', loadData);
-  }, []);
-
-  /**
-   * Checks if a class is cancelled.
-   */
   const getCancelledInfo = (
     classId: string,
     dayKey: string
@@ -240,9 +197,6 @@ export function ScheduleList({
     );
   };
 
-  /**
-   * Checks if a class is online.
-   */
   const getOnlineInfo = (
     classId: string,
     dayKey: string
@@ -250,9 +204,6 @@ export function ScheduleList({
     return onlineClasses.find((c) => c.classId === classId && c.day === dayKey);
   };
 
-  /**
-   * Checks if a class has a substitute.
-   */
   const getSubstitutedInfo = (
     classId: string,
     dayKey: string
@@ -262,9 +213,6 @@ export function ScheduleList({
     );
   };
 
-  /**
-   * Opens the cancel modal for a class.
-   */
   const handleCancelClick = (
     e: React.MouseEvent,
     classId: string,
@@ -277,9 +225,6 @@ export function ScheduleList({
     setCancelModalOpen(true);
   };
 
-  /**
-   * Opens the online modal for a class.
-   */
   const handleOnlineClick = (
     e: React.MouseEvent,
     classId: string,
@@ -292,71 +237,43 @@ export function ScheduleList({
     setOnlineModalOpen(true);
   };
 
-  /**
-   * Removes online status from a class.
-   */
   const handleRemoveOnlineClick = (
     e: React.MouseEvent,
     classId: string,
     dayKey: string
   ) => {
     e.stopPropagation();
-    const updated = onlineClasses.filter(
-      (c) => !(c.classId === classId && c.day === dayKey)
+    setOnlineClasses(
+      onlineClasses.filter((c) => !(c.classId === classId && c.day === dayKey))
     );
-    setOnlineClasses(updated);
-    localStorage.setItem(ONLINE_CLASSES_KEY, JSON.stringify(updated));
   };
 
-  /**
-   * Restores a cancelled class.
-   */
   const handleRestoreClick = (
     e: React.MouseEvent,
     classId: string,
     dayKey: string
   ) => {
     e.stopPropagation();
-    const updated = cancelledClasses.filter(
-      (c) => !(c.classId === classId && c.day === dayKey)
+    setCancelledClasses(
+      cancelledClasses.filter(
+        (c) => !(c.classId === classId && c.day === dayKey)
+      )
     );
-    setCancelledClasses(updated);
-    localStorage.setItem(CANCELLED_CLASSES_KEY, JSON.stringify(updated));
   };
 
-  /**
-   * Refreshes cancelled classes after a new cancellation.
-   */
   const handleCancelled = () => {
-    const saved = localStorage.getItem(CANCELLED_CLASSES_KEY);
-    if (saved) {
-      setCancelledClasses(JSON.parse(saved));
-    }
+    // Refresh will happen automatically via useLocalStorage
   };
 
-  /**
-   * Refreshes online classes after update.
-   */
   const handleOnlineUpdated = () => {
-    const saved = localStorage.getItem(ONLINE_CLASSES_KEY);
-    if (saved) {
-      setOnlineClasses(JSON.parse(saved));
-    }
+    // Refresh will happen automatically via useLocalStorage
   };
 
-  /**
-   * Deletes a makeup class.
-   */
   const handleDeleteMakeupClass = (e: React.MouseEvent, makeupId: string) => {
     e.stopPropagation();
-    const updated = makeupClasses.filter((m) => m.id !== makeupId);
-    setMakeupClasses(updated);
-    localStorage.setItem(MAKEUP_CLASSES_KEY, JSON.stringify(updated));
+    setMakeupClasses(makeupClasses.filter((m) => m.id !== makeupId));
   };
 
-  /**
-   * Opens the substitute modal for a class.
-   */
   const handleSubstituteClick = (
     e: React.MouseEvent,
     classId: string,
@@ -369,41 +286,31 @@ export function ScheduleList({
     setSubstituteModalOpen(true);
   };
 
-  /**
-   * Removes substitute from a class.
-   */
   const handleRemoveSubstituteClick = (
     e: React.MouseEvent,
     classId: string,
     dayKey: string
   ) => {
     e.stopPropagation();
-    const updated = substitutedClasses.filter(
-      (c) => !(c.classId === classId && c.day === dayKey)
+    setSubstitutedClasses(
+      substitutedClasses.filter(
+        (c) => !(c.classId === classId && c.day === dayKey)
+      )
     );
-    setSubstitutedClasses(updated);
-    localStorage.setItem(SUBSTITUTED_CLASSES_KEY, JSON.stringify(updated));
   };
 
-  /**
-   * Refreshes substituted classes after update.
-   */
   const handleSubstituteUpdated = () => {
-    const saved = localStorage.getItem(SUBSTITUTED_CLASSES_KEY);
-    if (saved) {
-      setSubstitutedClasses(JSON.parse(saved));
-    }
+    // Refresh will happen automatically via useLocalStorage
   };
 
-  // Render exams list
   if (scheduleType === 'exams') {
     const filteredExams = filterExams(exams, subjectFilter, teacherFilter);
 
     if (filteredExams.length === 0) {
       return (
         <div className="w-full max-w-3xl">
-          <div className="bg-card rounded-xl border shadow-sm p-8 text-center">
-            <p className="text-muted-foreground">
+          <div className="bg-card rounded-lg sm:rounded-xl border shadow-sm p-6 sm:p-8 text-center">
+            <p className="text-sm sm:text-base text-muted-foreground">
               {subjectFilter
                 ? 'Екзамен не знайдено'
                 : teacherFilter
@@ -416,31 +323,35 @@ export function ScheduleList({
     }
 
     return (
-      <div className="w-full max-w-3xl space-y-3">
+      <div className="w-full max-w-3xl space-y-2 sm:space-y-3">
         {filteredExams.map((exam) => (
           <div
             key={exam.id}
-            className="bg-card rounded-xl border shadow-sm p-4"
+            className="bg-card rounded-lg sm:rounded-xl border shadow-sm p-3 sm:p-4"
           >
             {/* Header: Date + Time */}
-            <div className="flex justify-between items-start mb-3">
-              <span className="text-lg font-medium capitalize">
+            <div className="flex justify-between items-start mb-2 sm:mb-3">
+              <span className="text-base sm:text-lg font-medium capitalize">
                 {formatDate(exam.date)}
               </span>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs sm:text-sm text-muted-foreground">
                 {exam.timeStart}-{exam.timeEnd}
               </span>
             </div>
 
             {/* Subject */}
-            <h3 className="text-xl font-semibold mb-3">{exam.subject}</h3>
+            <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">
+              {exam.subject}
+            </h3>
 
             {/* Footer: Teacher + Type/Room */}
             <div className="flex justify-between items-end">
-              <span className="text-muted-foreground">{exam.teacher}</span>
+              <span className="text-sm sm:text-base text-muted-foreground">
+                {exam.teacher}
+              </span>
               <div className="text-right">
                 <div
-                  className={`text-sm font-medium ${
+                  className={`text-xs sm:text-sm font-medium ${
                     exam.type === 'Екзамен'
                       ? 'text-destructive'
                       : 'text-primary'
@@ -448,7 +359,9 @@ export function ScheduleList({
                 >
                   {exam.type}
                 </div>
-                <div className="text-sm text-muted-foreground">{exam.room}</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">
+                  {exam.room}
+                </div>
               </div>
             </div>
           </div>
@@ -457,7 +370,6 @@ export function ScheduleList({
     );
   }
 
-  // Render a single class item
   const renderClassItem = (item: ScheduleItem, dayKey: string) => {
     const cancelledInfo = getCancelledInfo(item.id, dayKey);
     const onlineInfo = getOnlineInfo(item.id, dayKey);
@@ -469,7 +381,7 @@ export function ScheduleList({
     return (
       <div
         key={item.id}
-        className={`bg-card rounded-xl border shadow-sm p-4 relative ${
+        className={`bg-card rounded-lg sm:rounded-xl border shadow-sm p-3 sm:p-4 relative ${
           isCancelled
             ? 'opacity-60 border-destructive/30'
             : isOnline
@@ -481,67 +393,72 @@ export function ScheduleList({
       >
         {/* Status badges */}
         {isCancelled && (
-          <div className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
-            <XCircle size={12} />
-            Відмінено
+          <div className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-xs px-1.5 sm:px-2 py-0.5 rounded-full flex items-center gap-0.5 sm:gap-1">
+            <XCircle size={10} className="sm:w-3 sm:h-3" />
+            <span className="hidden sm:inline">Відмінено</span>
           </div>
         )}
         {isOnline && !isCancelled && (
-          <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
-            <Video size={12} />
-            Онлайн
+          <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs px-1.5 sm:px-2 py-0.5 rounded-full flex items-center gap-0.5 sm:gap-1">
+            <Video size={10} className="sm:w-3 sm:h-3" />
+            <span className="hidden sm:inline">Онлайн</span>
           </div>
         )}
         {isSubstituted && !isCancelled && !isOnline && (
-          <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
-            <UserCheck size={12} />
-            Заміна
+          <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-1.5 sm:px-2 py-0.5 rounded-full flex items-center gap-0.5 sm:gap-1">
+            <UserCheck size={10} className="sm:w-3 sm:h-3" />
+            <span className="hidden sm:inline">Заміна</span>
           </div>
         )}
 
-        <div className="flex justify-between items-start mb-3">
+        <div className="flex justify-between items-start mb-2 sm:mb-3">
           <span
-            className={`text-lg font-medium ${isCancelled ? 'line-through' : ''}`}
+            className={`text-base sm:text-lg font-medium ${isCancelled ? 'line-through' : ''}`}
           >
             {item.number} Пара
           </span>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-xs sm:text-sm text-muted-foreground">
             {item.timeStart}-{item.timeEnd}
           </span>
         </div>
 
         <h3
-          className={`text-xl font-semibold mb-3 ${isCancelled ? 'line-through' : ''}`}
+          className={`text-lg sm:text-xl font-semibold mb-2 sm:mb-3 ${isCancelled ? 'line-through' : ''}`}
         >
           {item.subject}
         </h3>
 
         {/* Cancelled message */}
         {isCancelled && cancelledInfo.message && (
-          <div className="mb-3 p-2 bg-destructive/10 rounded-lg flex items-start gap-2">
+          <div className="mb-2 sm:mb-3 p-2 bg-destructive/10 rounded-lg flex items-start gap-1.5 sm:gap-2">
             <AlertCircle
-              size={16}
-              className="text-destructive mt-0.5 shrink-0"
+              size={14}
+              className="text-destructive mt-0.5 shrink-0 sm:w-4 sm:h-4"
             />
-            <p className="text-sm text-destructive">{cancelledInfo.message}</p>
+            <p className="text-xs sm:text-sm text-destructive">
+              {cancelledInfo.message}
+            </p>
           </div>
         )}
 
         {/* Online info with Meet link */}
         {isOnline && !isCancelled && (
-          <div className="mb-3 p-2 bg-primary/10 rounded-lg space-y-1.5">
+          <div className="mb-2 sm:mb-3 p-2 bg-primary/10 rounded-lg space-y-1 sm:space-y-1.5">
             <a
               href={onlineInfo.meetLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              className="inline-flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium text-primary hover:underline"
             >
-              <Video size={14} />
-              Приєднатися до Google Meet
-              <ExternalLink size={12} />
+              <Video size={12} className="sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline">
+                Приєднатися до Google Meet
+              </span>
+              <span className="sm:hidden">Google Meet</span>
+              <ExternalLink size={10} className="sm:w-3 sm:h-3" />
             </a>
             {onlineInfo.message && (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {onlineInfo.message}
               </p>
             )}
@@ -550,55 +467,55 @@ export function ScheduleList({
 
         {/* Substitute info */}
         {isSubstituted && !isCancelled && (
-          <div className="mb-3 p-2 bg-orange-50 rounded-lg space-y-1">
-            <div className="flex items-center gap-1.5 text-sm font-medium text-orange-700">
-              <UserCheck size={14} />
+          <div className="mb-2 sm:mb-3 p-2 bg-orange-50 rounded-lg space-y-0.5 sm:space-y-1">
+            <div className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium text-orange-700">
+              <UserCheck size={12} className="sm:w-3.5 sm:h-3.5" />
               <span>Заміна: {substitutedInfo.substituteTeacher}</span>
             </div>
             {substitutedInfo.message && (
-              <p className="text-sm text-orange-600/80">
+              <p className="text-xs sm:text-sm text-orange-600/80">
                 {substitutedInfo.message}
               </p>
             )}
           </div>
         )}
 
-        <div className="flex justify-between items-end">
-          <div className="text-muted-foreground">
+        <div className="flex justify-between items-end gap-2">
+          <div className="text-xs sm:text-sm text-muted-foreground min-w-0 shrink">
             {teacherFilter ? (
               <div className="flex flex-col gap-0.5">
-                <span className="font-medium text-foreground">
+                <span className="font-medium text-foreground truncate">
                   {item.groups?.join(', ') || 'Група'}
                 </span>
-                <span className="text-sm">
+                <span className="text-xs sm:text-sm">
                   {item.subgroup ? `Підгрупа ${item.subgroup}` : 'Вся група'}
                 </span>
               </div>
             ) : isSubstituted ? (
               <div className="flex flex-col gap-0.5">
-                <span className="line-through text-muted-foreground/60">
+                <span className="line-through text-muted-foreground/60 truncate">
                   {item.teacher}
                 </span>
-                <span className="font-medium text-orange-700">
+                <span className="font-medium text-orange-700 truncate">
                   {substitutedInfo.substituteTeacher}
                 </span>
               </div>
             ) : (
-              item.teacher
+              <span className="truncate">{item.teacher}</span>
             )}
           </div>
-          <div className="flex items-end gap-2">
+          <div className="flex items-end gap-1 sm:gap-2 shrink-0">
             {/* Action buttons for teachers - only on their own classes */}
             {currentTeacherName && item.teacher === currentTeacherName && (
               <>
                 {isCancelled ? (
                   <button
                     onClick={(e) => handleRestoreClick(e, item.id, dayKey)}
-                    className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1.5 text-sm font-medium"
+                    className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium"
                     title="Відновити пару"
                   >
-                    <RotateCcw size={14} />
-                    <span>Відновити</span>
+                    <RotateCcw size={12} className="sm:w-3.5 sm:h-3.5" />
+                    <span className="hidden sm:inline">Відновити</span>
                   </button>
                 ) : (
                   <>
@@ -608,11 +525,13 @@ export function ScheduleList({
                         onClick={(e) =>
                           handleRemoveOnlineClick(e, item.id, dayKey)
                         }
-                        className="px-3 py-1.5 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-colors flex items-center gap-1.5 text-sm font-medium"
+                        className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-colors flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium"
                         title="Відмінити онлайн"
                       >
-                        <Video size={14} />
-                        <span>Відмінити онлайн</span>
+                        <Video size={12} className="sm:w-3.5 sm:h-3.5" />
+                        <span className="hidden sm:inline">
+                          Відмінити онлайн
+                        </span>
                       </button>
                     ) : (
                       <button
@@ -625,10 +544,10 @@ export function ScheduleList({
                             `${item.timeStart}-${item.timeEnd}`
                           )
                         }
-                        className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                        className="p-1 sm:p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                         title="Перенести онлайн"
                       >
-                        <Video size={16} />
+                        <Video size={14} className="sm:w-4 sm:h-4" />
                       </button>
                     )}
                     {/* Substitute button */}
@@ -637,11 +556,13 @@ export function ScheduleList({
                         onClick={(e) =>
                           handleRemoveSubstituteClick(e, item.id, dayKey)
                         }
-                        className="px-3 py-1.5 rounded-lg bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors flex items-center gap-1.5 text-sm font-medium"
+                        className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium"
                         title="Відмінити заміну"
                       >
-                        <UserCheck size={14} />
-                        <span>Відмінити заміну</span>
+                        <UserCheck size={12} className="sm:w-3.5 sm:h-3.5" />
+                        <span className="hidden sm:inline">
+                          Відмінити заміну
+                        </span>
                       </button>
                     ) : (
                       <button
@@ -654,10 +575,10 @@ export function ScheduleList({
                             `${item.timeStart}-${item.timeEnd}`
                           )
                         }
-                        className="p-1.5 rounded-lg bg-orange-100 text-orange-600 hover:bg-orange-200 transition-colors"
+                        className="p-1 sm:p-1.5 rounded-lg bg-orange-100 text-orange-600 hover:bg-orange-200 transition-colors"
                         title="Призначити заміну"
                       >
-                        <UserCheck size={16} />
+                        <UserCheck size={14} className="sm:w-4 sm:h-4" />
                       </button>
                     )}
                     {/* Cancel button - only if not online and not substituted */}
@@ -672,10 +593,10 @@ export function ScheduleList({
                             `${item.timeStart}-${item.timeEnd}`
                           )
                         }
-                        className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                        className="p-1 sm:p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
                         title="Відмінити пару"
                       >
-                        <XCircle size={16} />
+                        <XCircle size={14} className="sm:w-4 sm:h-4" />
                       </button>
                     )}
                   </>
@@ -683,8 +604,10 @@ export function ScheduleList({
               </>
             )}
             <div className="text-right">
-              <div className="text-sm font-medium">{item.type}</div>
-              <div className="text-sm text-muted-foreground">{item.room}</div>
+              <div className="text-xs sm:text-sm font-medium">{item.type}</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">
+                {item.room}
+              </div>
             </div>
           </div>
         </div>
@@ -692,14 +615,10 @@ export function ScheduleList({
     );
   };
 
-  /**
-   * Gets makeup classes for a specific day filtered by group or teacher.
-   */
   const getMakeupClassesForDay = (dayKey: string): MakeupClass[] => {
     return makeupClasses.filter((makeup) => {
       if (makeup.day !== dayKey) return false;
 
-      // Filter by subject if provided
       if (
         subjectFilter &&
         !makeup.subject.toLowerCase().includes(subjectFilter.toLowerCase())
@@ -707,17 +626,14 @@ export function ScheduleList({
         return false;
       }
 
-      // Filter by class type if provided
       if (classTypeFilter && makeup.type !== classTypeFilter) {
         return false;
       }
 
-      // If viewing a teacher's schedule, show their makeup classes
       if (teacherFilter) {
         return makeup.teacher === teacherFilter;
       }
 
-      // If viewing a group's schedule, show makeup classes for that group
       if (selectedGroup) {
         return makeup.groups.includes(selectedGroup);
       }
@@ -726,93 +642,99 @@ export function ScheduleList({
     });
   };
 
-  /**
-   * Renders a makeup class item.
-   */
   const renderMakeupClassItem = (makeup: MakeupClass) => {
     const classTime = CLASS_TIMES.find((c) => c.number === makeup.classNumber);
 
     return (
       <div
         key={makeup.id}
-        className="bg-lime-50 rounded-xl border border-lime-400 shadow-sm p-4 relative"
+        className="bg-lime-50 rounded-lg sm:rounded-xl border border-lime-400 shadow-sm p-3 sm:p-4 relative"
       >
         {/* Makeup badge */}
-        <div className="absolute -top-2 -right-2 bg-lime-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
-          <Plus size={12} />
-          Відпрацювання
+        <div className="absolute -top-2 -right-2 bg-lime-500 text-white text-xs px-1.5 sm:px-2 py-0.5 rounded-full flex items-center gap-0.5 sm:gap-1">
+          <Plus size={10} className="sm:w-3 sm:h-3" />
+          <span className="hidden sm:inline">Відпрацювання</span>
         </div>
 
         {/* Online badge if applicable */}
         {makeup.isOnline && (
-          <div className="absolute -top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
-            <Video size={12} />
-            Онлайн
+          <div className="absolute -top-2 left-2 bg-primary text-primary-foreground text-xs px-1.5 sm:px-2 py-0.5 rounded-full flex items-center gap-0.5 sm:gap-1">
+            <Video size={10} className="sm:w-3 sm:h-3" />
+            <span className="hidden sm:inline">Онлайн</span>
           </div>
         )}
 
         <div className="flex justify-between items-start mb-2">
-          <span className="text-sm font-medium text-muted-foreground">
+          <span className="text-xs sm:text-sm font-medium text-muted-foreground">
             {makeup.classNumber} Пара
           </span>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-xs sm:text-sm text-muted-foreground">
             {classTime?.time.replace('-', '-')}
           </span>
         </div>
 
-        <h3 className="text-lg font-semibold mb-2">{makeup.subject}</h3>
+        <h3 className="text-base sm:text-lg font-semibold mb-2">
+          {makeup.subject}
+        </h3>
 
         {/* Message if provided */}
         {makeup.message && (
-          <div className="mb-3 p-2 bg-muted rounded-lg">
-            <p className="text-sm text-muted-foreground">{makeup.message}</p>
+          <div className="mb-2 sm:mb-3 p-2 bg-muted rounded-lg">
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              {makeup.message}
+            </p>
           </div>
         )}
 
         {/* Online link if applicable */}
         {makeup.isOnline && makeup.meetLink && (
-          <div className="mb-3 p-2 bg-primary/10 rounded-lg">
+          <div className="mb-2 sm:mb-3 p-2 bg-primary/10 rounded-lg">
             <a
               href={makeup.meetLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-primary hover:underline"
+              className="flex items-center gap-1.5 sm:gap-2 text-primary hover:underline"
             >
-              <ExternalLink size={14} />
-              <span className="text-sm font-medium">
-                Приєднатися до Google Meet
+              <ExternalLink size={12} className="sm:w-3.5 sm:h-3.5" />
+              <span className="text-xs sm:text-sm font-medium">
+                <span className="hidden sm:inline">
+                  Приєднатися до Google Meet
+                </span>
+                <span className="sm:hidden">Google Meet</span>
               </span>
             </a>
           </div>
         )}
 
-        <div className="flex justify-between items-end">
-          <div className="text-muted-foreground">
+        <div className="flex justify-between items-end gap-2">
+          <div className="text-xs sm:text-sm text-muted-foreground min-w-0 shrink">
             {teacherFilter ? (
               <div className="flex flex-col gap-0.5">
-                <span className="font-medium text-foreground">
+                <span className="font-medium text-foreground truncate">
                   {makeup.groups.join(', ')}
                 </span>
               </div>
             ) : (
-              makeup.teacher
+              <span className="truncate">{makeup.teacher}</span>
             )}
           </div>
-          <div className="flex items-end gap-3">
+          <div className="flex items-end gap-1 sm:gap-3 shrink-0">
             {/* Delete button - only for the teacher who created it */}
             {currentTeacherName && makeup.teacher === currentTeacherName && (
               <button
                 onClick={(e) => handleDeleteMakeupClass(e, makeup.id)}
-                className="px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors flex items-center gap-1.5 text-sm font-medium"
+                className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium"
                 title="Відмінити відпрацювання"
               >
-                <XCircle size={14} />
-                <span>Відмінити</span>
+                <XCircle size={12} className="sm:w-3.5 sm:h-3.5" />
+                <span className="hidden sm:inline">Відмінити</span>
               </button>
             )}
             <div className="text-right">
-              <div className="text-sm font-medium">{makeup.type}</div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs sm:text-sm font-medium">
+                {makeup.type}
+              </div>
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 {makeup.isOnline ? 'Онлайн' : makeup.room}
               </div>
             </div>
@@ -822,7 +744,6 @@ export function ScheduleList({
     );
   };
 
-  // Class times for reference
   const CLASS_TIMES = [
     { number: 1, time: '8:30-9:50' },
     { number: 2, time: '10:05-11:25' },
@@ -834,7 +755,6 @@ export function ScheduleList({
     { number: 8, time: '19:50-21:10' },
   ];
 
-  // Render classes schedule
   const renderDaySchedule = (dayKey: string, items: ScheduleItem[]) => {
     const filteredSchedule = filterSchedule(
       items,
@@ -851,7 +771,6 @@ export function ScheduleList({
       return null;
     }
 
-    // Combine and sort by class number
     type CombinedItem =
       | { type: 'regular'; data: ScheduleItem; number: number }
       | { type: 'makeup'; data: MakeupClass; number: number };
@@ -870,9 +789,9 @@ export function ScheduleList({
     ].sort((a, b) => a.number - b.number);
 
     return (
-      <div key={dayKey} className="space-y-3">
+      <div key={dayKey} className="space-y-2 sm:space-y-3">
         {showAllDays && (
-          <h2 className="text-lg font-semibold text-foreground/80 pt-2">
+          <h2 className="text-base sm:text-lg font-semibold text-foreground/80 pt-1 sm:pt-2">
             {DAY_NAMES[dayKey]}
           </h2>
         )}
@@ -894,8 +813,8 @@ export function ScheduleList({
     if (allDaysContent.length === 0) {
       return (
         <div className="w-full max-w-3xl">
-          <div className="bg-card rounded-xl border shadow-sm p-8 text-center">
-            <p className="text-muted-foreground">
+          <div className="bg-card rounded-lg sm:rounded-xl border shadow-sm p-6 sm:p-8 text-center">
+            <p className="text-sm sm:text-base text-muted-foreground">
               {subjectFilter
                 ? 'Дисципліну не знайдено'
                 : teacherFilter
@@ -909,7 +828,9 @@ export function ScheduleList({
 
     return (
       <>
-        <div className="w-full max-w-3xl space-y-4">{allDaysContent}</div>
+        <div className="w-full max-w-3xl space-y-3 sm:space-y-4">
+          {allDaysContent}
+        </div>
         {selectedClass && (
           <>
             <CancelClassModal
@@ -955,7 +876,6 @@ export function ScheduleList({
   );
   const currentDayMakeupClasses = getMakeupClassesForDay(currentDay);
 
-  // Combine and sort by class number for single day view
   type CombinedItemSingle =
     | { type: 'regular'; data: ScheduleItem; number: number }
     | { type: 'makeup'; data: MakeupClass; number: number };
@@ -975,7 +895,7 @@ export function ScheduleList({
 
   return (
     <>
-      <div className="w-full max-w-3xl space-y-3">
+      <div className="w-full max-w-3xl space-y-2 sm:space-y-3">
         {combinedCurrentDay.map((item) =>
           item.type === 'regular'
             ? renderClassItem(item.data, currentDay)
@@ -983,8 +903,8 @@ export function ScheduleList({
         )}
 
         {combinedCurrentDay.length === 0 && (
-          <div className="bg-card rounded-xl border shadow-sm p-8 text-center">
-            <p className="text-muted-foreground">
+          <div className="bg-card rounded-lg sm:rounded-xl border shadow-sm p-6 sm:p-8 text-center">
+            <p className="text-sm sm:text-base text-muted-foreground">
               {subjectFilter
                 ? 'Дисципліну не знайдено'
                 : teacherFilter

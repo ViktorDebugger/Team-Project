@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Search, Bookmark } from 'lucide-react';
 import {
   Dialog,
@@ -8,12 +8,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useSchedule } from '@/contexts';
+import { useLocalStorage } from '@/hooks';
 
-/** localStorage keys */
 const SAVED_GROUPS_KEY = 'savedGroups';
 const SAVED_TEACHERS_KEY = 'savedTeachers';
 
-/** Mock groups data */
 const GROUPS = [
   'ОІ-35',
   'ОІ-34',
@@ -29,7 +29,6 @@ const GROUPS = [
   'ІПЗ-12',
 ];
 
-/** Mock teachers data */
 const TEACHERS = [
   'Ковальчук А.М',
   'Петренко О.І',
@@ -49,51 +48,35 @@ const TEACHERS = [
   'Романюк Л.П',
 ];
 
-/** Search type */
 type SearchType = 'groups' | 'teachers';
 
 interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
-  currentGroup: string;
-  currentTeacher: string;
-  onGroupSelect: (group: string) => void;
-  onTeacherSelect: (teacher: string) => void;
 }
 
-/**
- * Modal for searching and selecting a group or teacher.
- */
-export function SearchModal({
-  isOpen,
-  onClose,
-  currentGroup,
-  currentTeacher,
-  onGroupSelect,
-  onTeacherSelect,
-}: SearchModalProps) {
+export function SearchModal({ isOpen, onClose }: SearchModalProps) {
+  const { selectedGroup, selectedTeacher, selectGroup, selectTeacher } =
+    useSchedule();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState<SearchType>('groups');
-  const [savedGroups, setSavedGroups] = useState<string[]>([]);
-  const [savedTeachers, setSavedTeachers] = useState<string[]>([]);
-
-  // Load saved items from localStorage
-  useEffect(() => {
-    const groups = localStorage.getItem(SAVED_GROUPS_KEY);
-    const teachers = localStorage.getItem(SAVED_TEACHERS_KEY);
-    if (groups) setSavedGroups(JSON.parse(groups));
-    if (teachers) setSavedTeachers(JSON.parse(teachers));
-  }, []);
+  const [savedGroups, setSavedGroups] = useLocalStorage<string[]>(
+    SAVED_GROUPS_KEY,
+    []
+  );
+  const [savedTeachers, setSavedTeachers] = useLocalStorage<string[]>(
+    SAVED_TEACHERS_KEY,
+    []
+  );
 
   const items = searchType === 'groups' ? GROUPS : TEACHERS;
   const savedItems = searchType === 'groups' ? savedGroups : savedTeachers;
-  const currentItem = searchType === 'groups' ? currentGroup : currentTeacher;
+  const currentItem = searchType === 'groups' ? selectedGroup : selectedTeacher;
 
   const filteredItems = items.filter((item) =>
     item.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Sort: saved items first
   const sortedItems = [...filteredItems].sort((a, b) => {
     const aIsSaved = savedItems.includes(a);
     const bIsSaved = savedItems.includes(b);
@@ -104,9 +87,9 @@ export function SearchModal({
 
   const handleItemSelect = (item: string) => {
     if (searchType === 'groups') {
-      onGroupSelect(item);
+      selectGroup(item);
     } else {
-      onTeacherSelect(item);
+      selectTeacher(item);
     }
     onClose();
     setSearchQuery('');
@@ -116,17 +99,17 @@ export function SearchModal({
     e.stopPropagation();
 
     if (searchType === 'groups') {
-      const newSaved = savedGroups.includes(item)
-        ? savedGroups.filter((g) => g !== item)
-        : [...savedGroups, item];
-      setSavedGroups(newSaved);
-      localStorage.setItem(SAVED_GROUPS_KEY, JSON.stringify(newSaved));
+      setSavedGroups(
+        savedGroups.includes(item)
+          ? savedGroups.filter((g) => g !== item)
+          : [...savedGroups, item]
+      );
     } else {
-      const newSaved = savedTeachers.includes(item)
-        ? savedTeachers.filter((t) => t !== item)
-        : [...savedTeachers, item];
-      setSavedTeachers(newSaved);
-      localStorage.setItem(SAVED_TEACHERS_KEY, JSON.stringify(newSaved));
+      setSavedTeachers(
+        savedTeachers.includes(item)
+          ? savedTeachers.filter((t) => t !== item)
+          : [...savedTeachers, item]
+      );
     }
   };
 
@@ -147,7 +130,6 @@ export function SearchModal({
           <DialogTitle>Пошук</DialogTitle>
         </DialogHeader>
 
-        {/* Search type toggle */}
         <div className="flex gap-1 p-1 bg-muted rounded-lg">
           <button
             onClick={() => {
@@ -177,7 +159,6 @@ export function SearchModal({
           </button>
         </div>
 
-        {/* Search input */}
         <div className="relative">
           <Search
             size={18}
@@ -197,7 +178,6 @@ export function SearchModal({
           />
         </div>
 
-        {/* Items list */}
         <div className="max-h-80 overflow-y-auto -mx-2">
           {sortedItems.length > 0 ? (
             sortedItems.map((item) => (
