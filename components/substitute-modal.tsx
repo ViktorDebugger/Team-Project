@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { UserCheck } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { UserCheck, ChevronDown } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,29 @@ export interface SubstitutedClass {
   createdAt: string;
 }
 
+/** Available teachers list */
+const AVAILABLE_TEACHERS = [
+  'Петренко О.І',
+  'Ковальчук А.М',
+  'Савчук Т.М',
+  'Коваль М.П',
+  'Грищенко В.В',
+  'Бойко А.А',
+  'Шевченко Н.В',
+  'Литвин О.М',
+  'Бондар А.С',
+  'Мельник І.О',
+  'Іванов С.С',
+  'Ткачук В.М',
+  'Романюк Л.П',
+  'Гнатюк Р.П',
+  'Данилюк І.В',
+  'Кравчук О.П',
+  'Потужний В.П',
+  'Сидоренко К.Л',
+  'Марченко Д.О',
+];
+
 interface SubstituteModalProps {
   /** Whether the modal is open */
   isOpen: boolean;
@@ -38,7 +61,7 @@ interface SubstituteModalProps {
 }
 
 /**
- * Modal for assigning a substitute teacher.
+ * Modal for assigning a substitute teacher with searchable dropdown.
  * @param {SubstituteModalProps} props - Component props
  * @returns {JSX.Element} Substitute modal
  * @example
@@ -56,6 +79,31 @@ export function SubstituteModal({
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Filter teachers based on input
+  const filteredTeachers = AVAILABLE_TEACHERS.filter((teacher) =>
+    teacher.toLowerCase().includes(substituteTeacher.toLowerCase())
+  );
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   /**
    * Handles modal close.
@@ -65,8 +113,18 @@ export function SubstituteModal({
       setSubstituteTeacher('');
       setMessage('');
       setError('');
+      setIsDropdownOpen(false);
       onClose();
     }
+  };
+
+  /**
+   * Handles teacher selection from dropdown.
+   */
+  const handleSelectTeacher = (teacher: string) => {
+    setSubstituteTeacher(teacher);
+    setIsDropdownOpen(false);
+    setError('');
   };
 
   /**
@@ -77,7 +135,7 @@ export function SubstituteModal({
     setError('');
 
     if (!substituteTeacher.trim()) {
-      setError('Введіть ПІБ викладача');
+      setError('Оберіть або введіть ПІБ викладача');
       return;
     }
 
@@ -119,6 +177,7 @@ export function SubstituteModal({
     setIsLoading(false);
     setSubstituteTeacher('');
     setMessage('');
+    setIsDropdownOpen(false);
     onUpdated();
     onClose();
   };
@@ -142,23 +201,74 @@ export function SubstituteModal({
               </span>
             </p>
 
-            {/* Substitute teacher name */}
+            {/* Substitute teacher searchable dropdown */}
             <div className="space-y-2">
               <label
                 htmlFor="substitute-teacher"
                 className="text-sm font-medium text-foreground"
               >
-                ПІБ викладача-замінника
+                ПІБ викладача, який буде заміняти пару
               </label>
-              <input
-                id="substitute-teacher"
-                type="text"
-                value={substituteTeacher}
-                onChange={(e) => setSubstituteTeacher(e.target.value)}
-                placeholder="Наприклад: Потужний В.П"
-                className="w-full px-3 py-2 rounded-xl border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <div className="relative">
+                  <input
+                    ref={inputRef}
+                    id="substitute-teacher"
+                    type="text"
+                    value={substituteTeacher}
+                    onChange={(e) => {
+                      setSubstituteTeacher(e.target.value);
+                      setIsDropdownOpen(true);
+                      setError('');
+                    }}
+                    onFocus={() => setIsDropdownOpen(true)}
+                    placeholder="Почніть вводити ПІБ..."
+                    className="w-full px-3 py-2 pr-10 rounded-xl border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    disabled={isLoading}
+                    autoComplete="off"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                    tabIndex={-1}
+                  >
+                    <ChevronDown
+                      size={18}
+                      className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                </div>
+
+                {/* Dropdown list */}
+                {isDropdownOpen && (
+                  <div
+                    ref={dropdownRef}
+                    className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto bg-card border rounded-xl shadow-lg"
+                  >
+                    {filteredTeachers.length > 0 ? (
+                      filteredTeachers.map((teacher) => (
+                        <button
+                          key={teacher}
+                          type="button"
+                          onClick={() => handleSelectTeacher(teacher)}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors first:rounded-t-xl last:rounded-b-xl ${
+                            substituteTeacher === teacher
+                              ? 'bg-orange-50 text-orange-700 font-medium'
+                              : ''
+                          }`}
+                        >
+                          {teacher}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">
+                        Викладача не знайдено
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

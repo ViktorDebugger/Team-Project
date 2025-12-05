@@ -611,38 +611,34 @@ export function ScheduleList({
                         <Video size={16} />
                       </button>
                     )}
-                    {/* Substitute button - only if not online */}
-                    {!isOnline && (
-                      <>
-                        {isSubstituted ? (
-                          <button
-                            onClick={(e) =>
-                              handleRemoveSubstituteClick(e, item.id, dayKey)
-                            }
-                            className="px-3 py-1.5 rounded-lg bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors flex items-center gap-1.5 text-sm font-medium"
-                            title="Відмінити заміну"
-                          >
-                            <UserCheck size={14} />
-                            <span>Відмінити заміну</span>
-                          </button>
-                        ) : (
-                          <button
-                            onClick={(e) =>
-                              handleSubstituteClick(
-                                e,
-                                item.id,
-                                dayKey,
-                                item.subject,
-                                `${item.timeStart}-${item.timeEnd}`
-                              )
-                            }
-                            className="p-1.5 rounded-lg bg-orange-100 text-orange-600 hover:bg-orange-200 transition-colors"
-                            title="Призначити заміну"
-                          >
-                            <UserCheck size={16} />
-                          </button>
-                        )}
-                      </>
+                    {/* Substitute button */}
+                    {isSubstituted ? (
+                      <button
+                        onClick={(e) =>
+                          handleRemoveSubstituteClick(e, item.id, dayKey)
+                        }
+                        className="px-3 py-1.5 rounded-lg bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors flex items-center gap-1.5 text-sm font-medium"
+                        title="Відмінити заміну"
+                      >
+                        <UserCheck size={14} />
+                        <span>Відмінити заміну</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) =>
+                          handleSubstituteClick(
+                            e,
+                            item.id,
+                            dayKey,
+                            item.subject,
+                            `${item.timeStart}-${item.timeEnd}`
+                          )
+                        }
+                        className="p-1.5 rounded-lg bg-orange-100 text-orange-600 hover:bg-orange-200 transition-colors"
+                        title="Призначити заміну"
+                      >
+                        <UserCheck size={16} />
+                      </button>
                     )}
                     {/* Cancel button - only if not online and not substituted */}
                     {!isOnline && !isSubstituted && (
