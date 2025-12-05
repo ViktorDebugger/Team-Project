@@ -319,6 +319,9 @@ export default function Home() {
               }
               scheduleType={isExams ? 'exams' : 'classes'}
               classTypeFilter={classType !== 'all' ? classType : undefined}
+              currentTeacherName={
+                user.role === 'teacher' ? user.name : undefined
+              }
             />
           </main>
         </>

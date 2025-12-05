@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { GoogleButton } from '@/components/google-button';
 
 /**
@@ -14,19 +13,9 @@ export default function LoginPage() {
         Увійдіть до свого акаунту
       </p>
 
-      <div className="bg-card rounded-2xl border shadow-lg p-6 space-y-4">
+      <div className="bg-card rounded-2xl border shadow-lg p-6">
         {/* Google sign-in */}
         <GoogleButton text="Увійти через Google" />
-
-        {/* Register link */}
-        <div className="text-center pt-2">
-          <Link
-            href="/register"
-            className="text-sm text-primary hover:underline"
-          >
-            Немає акаунту? Зареєструватися
-          </Link>
-        </div>
       </div>
     </>
   );

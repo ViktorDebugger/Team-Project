@@ -30,13 +30,25 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
+/** Demo user presets */
+const DEMO_USERS = {
+  student: {
+    name: 'Лука В.Ю',
+    email: 'student@lpnu.ua',
+  },
+  teacher: {
+    name: 'Петренко О.І',
+    email: 'teacher@lpnu.ua',
+  },
+};
+
 interface GoogleButtonProps {
   /** Text to display on the button */
   text?: string;
 }
 
 /**
- * Google sign-in button component.
+ * Google sign-in button component with demo role selector.
  * @param {GoogleButtonProps} props - Component props
  * @returns {JSX.Element} Google button component
  * @example
@@ -47,6 +59,7 @@ export function GoogleButton({
 }: GoogleButtonProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [role, setRole] = useState<'student' | 'teacher'>('student');
 
   /**
    * Handles Google sign-in.
@@ -57,11 +70,11 @@ export function GoogleButton({
     // Simulate Google OAuth
     await new Promise((resolve) => setTimeout(resolve, 800));
 
-    // Mock Google user
+    const demoUser = DEMO_USERS[role];
     const user: UserData = {
-      name: 'Google User',
-      email: 'user@gmail.com',
-      role: 'student',
+      name: demoUser.name,
+      email: demoUser.email,
+      role,
     };
 
     localStorage.setItem(USER_KEY, JSON.stringify(user));
@@ -70,20 +83,59 @@ export function GoogleButton({
   };
 
   return (
-    <button
-      type="button"
-      onClick={handleGoogleSignIn}
-      disabled={isLoading}
-      className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-background border rounded-xl font-medium hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      {isLoading ? (
-        <div className="w-5 h-5 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
-      ) : (
-        <>
-          <GoogleIcon />
-          <span>{text}</span>
-        </>
-      )}
-    </button>
+    <div className="space-y-4">
+      {/* Demo role selector */}
+      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+        <p className="text-xs text-amber-700 font-medium mb-2 text-center">
+          🧪 Демо: оберіть роль
+        </p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setRole('student')}
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+              role === 'student'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-background border hover:bg-muted'
+            }`}
+          >
+            👨‍🎓 Студент
+          </button>
+          <button
+            type="button"
+            onClick={() => setRole('teacher')}
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+              role === 'teacher'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-background border hover:bg-muted'
+            }`}
+          >
+            👨‍🏫 Викладач
+          </button>
+        </div>
+        <p className="text-xs text-amber-600 mt-2 text-center">
+          {role === 'student'
+            ? `Увійдете як: ${DEMO_USERS.student.name}`
+            : `Увійдете як: ${DEMO_USERS.teacher.name}`}
+        </p>
+      </div>
+
+      {/* Google sign-in button */}
+      <button
+        type="button"
+        onClick={handleGoogleSignIn}
+        disabled={isLoading}
+        className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-background border rounded-xl font-medium hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isLoading ? (
+          <div className="w-5 h-5 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
+        ) : (
+          <>
+            <GoogleIcon />
+            <span>{text}</span>
+          </>
+        )}
+      </button>
+    </div>
   );
 }
