@@ -3,7 +3,7 @@ import './globals.css';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: 'University Schedule',
+  title: 'WakeUpLPNU',
   description:
     'University Schedule is a platform to manage schedule in University.',
 };
