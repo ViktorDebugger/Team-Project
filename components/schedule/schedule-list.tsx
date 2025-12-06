@@ -840,6 +840,8 @@ export function ScheduleList({
               day={selectedClass.day}
               subjectName={selectedClass.subject}
               onCancelled={handleCancelled}
+              cancelledClasses={cancelledClasses}
+              setCancelledClasses={setCancelledClasses}
             />
             <OnlineClassModal
               isOpen={onlineModalOpen}
@@ -849,6 +851,8 @@ export function ScheduleList({
               subjectName={selectedClass.subject}
               classTime={selectedClass.time}
               onUpdated={handleOnlineUpdated}
+              onlineClasses={onlineClasses}
+              setOnlineClasses={setOnlineClasses}
             />
             <SubstituteModal
               isOpen={substituteModalOpen}
@@ -857,6 +861,8 @@ export function ScheduleList({
               day={selectedClass.day}
               subjectName={selectedClass.subject}
               onUpdated={handleSubstituteUpdated}
+              substitutedClasses={substitutedClasses}
+              setSubstitutedClasses={setSubstitutedClasses}
             />
           </>
         )}
@@ -924,6 +930,8 @@ export function ScheduleList({
             day={selectedClass.day}
             subjectName={selectedClass.subject}
             onCancelled={handleCancelled}
+            cancelledClasses={cancelledClasses}
+            setCancelledClasses={setCancelledClasses}
           />
           <OnlineClassModal
             isOpen={onlineModalOpen}
@@ -933,6 +941,8 @@ export function ScheduleList({
             subjectName={selectedClass.subject}
             classTime={selectedClass.time}
             onUpdated={handleOnlineUpdated}
+            onlineClasses={onlineClasses}
+            setOnlineClasses={setOnlineClasses}
           />
           <SubstituteModal
             isOpen={substituteModalOpen}
@@ -941,6 +951,8 @@ export function ScheduleList({
             day={selectedClass.day}
             subjectName={selectedClass.subject}
             onUpdated={handleSubstituteUpdated}
+            substitutedClasses={substitutedClasses}
+            setSubstitutedClasses={setSubstitutedClasses}
           />
         </>
       )}

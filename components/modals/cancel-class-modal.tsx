@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { XCircle } from 'lucide-react';
 import {
   Dialog,
@@ -27,6 +27,8 @@ interface CancelClassModalProps {
   day: string;
   subjectName: string;
   onCancelled: () => void;
+  cancelledClasses: CancelledClass[];
+  setCancelledClasses: React.Dispatch<React.SetStateAction<CancelledClass[]>>;
 }
 
 export function CancelClassModal({
@@ -36,12 +38,30 @@ export function CancelClassModal({
   day,
   subjectName,
   onCancelled,
+  cancelledClasses,
+  setCancelledClasses,
 }: CancelClassModalProps) {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [cancelledClasses, setCancelledClasses] = useLocalStorage<
-    CancelledClass[]
-  >(CANCELLED_CLASSES_KEY, []);
+  // Manage body scroll when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      // Save current scroll position and prevent body scrolling
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+
+      return () => {
+        // Restore scroll position and body scrolling
+        const scrollY = parseInt(document.body.style.top || '0') * -1;
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -65,11 +65,15 @@ export default function Home() {
 
   // Check authentication on mount
   useEffect(() => {
-    if (user === null) {
-      router.push('/login');
-      return;
-    }
-    setIsLoading(false);
+    const timer = setTimeout(() => {
+      if (user === null) {
+        router.push('/login');
+        return;
+      }
+      setIsLoading(false);
+    }, 100); // Small delay to allow localStorage to load
+
+    return () => clearTimeout(timer);
   }, [user, router]);
 
   const handleLogout = () => {

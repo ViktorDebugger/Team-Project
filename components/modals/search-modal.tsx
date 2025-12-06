@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Bookmark } from 'lucide-react';
 import {
   Dialog,
@@ -8,11 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useSchedule } from '@/contexts';
-import { useLocalStorage } from '@/hooks';
-
-const SAVED_GROUPS_KEY = 'savedGroups';
-const SAVED_TEACHERS_KEY = 'savedTeachers';
+import { useSchedule, useFilters } from '@/contexts';
 
 const GROUPS = [
   'ОІ-35',
@@ -58,16 +54,30 @@ interface SearchModalProps {
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const { selectedGroup, selectedTeacher, selectGroup, selectTeacher } =
     useSchedule();
+  const { savedGroups, savedTeachers, setSavedGroups, setSavedTeachers } =
+    useFilters();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState<SearchType>('groups');
-  const [savedGroups, setSavedGroups] = useLocalStorage<string[]>(
-    SAVED_GROUPS_KEY,
-    []
-  );
-  const [savedTeachers, setSavedTeachers] = useLocalStorage<string[]>(
-    SAVED_TEACHERS_KEY,
-    []
-  );
+
+  // Manage body scroll when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      // Save current scroll position and prevent body scrolling
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+
+      return () => {
+        // Restore scroll position and body scrolling
+        const scrollY = parseInt(document.body.style.top || '0') * -1;
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isOpen]);
 
   const items = searchType === 'groups' ? GROUPS : TEACHERS;
   const savedItems = searchType === 'groups' ? savedGroups : savedTeachers;
@@ -178,7 +188,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
           />
         </div>
 
-        <div className="max-h-80 overflow-y-auto -mx-2">
+        <div className="max-h-80 overflow-y-auto -mx-2 space-y-1">
           {sortedItems.length > 0 ? (
             sortedItems.map((item) => (
               <div

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Video, Copy, Check, ExternalLink } from 'lucide-react';
 import {
   Dialog,
@@ -29,6 +29,8 @@ interface OnlineClassModalProps {
   subjectName: string;
   classTime: string;
   onUpdated: () => void;
+  onlineClasses: OnlineClass[];
+  setOnlineClasses: React.Dispatch<React.SetStateAction<OnlineClass[]>>;
 }
 
 const generateMeetLink = (): string => {
@@ -56,15 +58,32 @@ export function OnlineClassModal({
   subjectName,
   classTime,
   onUpdated,
+  onlineClasses,
+  setOnlineClasses,
 }: OnlineClassModalProps) {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [meetLink, setMeetLink] = useState('');
   const [isCopied, setIsCopied] = useState(false);
-  const [onlineClasses, setOnlineClasses] = useLocalStorage<OnlineClass[]>(
-    ONLINE_CLASSES_KEY,
-    []
-  );
+  // Manage body scroll when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      // Save current scroll position and prevent body scrolling
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+
+      return () => {
+        // Restore scroll position and body scrolling
+        const scrollY = parseInt(document.body.style.top || '0') * -1;
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isOpen]);
 
   const handleOpenChange = (open: boolean) => {
     if (open && !meetLink) {

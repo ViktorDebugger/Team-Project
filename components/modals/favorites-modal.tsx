@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Users,
   GraduationCap,
@@ -15,11 +15,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useSchedule } from '@/contexts';
+import { useSchedule, useFilters } from '@/contexts';
 import { useLocalStorage } from '@/hooks';
 
-const SAVED_GROUPS_KEY = 'savedGroups';
-const SAVED_TEACHERS_KEY = 'savedTeachers';
 const NOTIFICATIONS_KEY = 'notificationsEnabled';
 
 interface FavoriteItem {
@@ -40,20 +38,14 @@ export function FavoritesModal({ isOpen, onClose }: FavoritesModalProps) {
     selectGroup,
     selectTeacher,
   } = useSchedule();
+  const { savedGroups, savedTeachers, setSavedGroups, setSavedTeachers } =
+    useFilters();
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
-  const [savedGroups, setSavedGroups] = useLocalStorage<string[]>(
-    SAVED_GROUPS_KEY,
-    []
-  );
-  const [savedTeachers, setSavedTeachers] = useLocalStorage<string[]>(
-    SAVED_TEACHERS_KEY,
-    []
-  );
   const [notifications, setNotifications] = useLocalStorage<
     Record<string, boolean>
   >(NOTIFICATIONS_KEY, {});
 
-  useState(() => {
+  useEffect(() => {
     if (isOpen) {
       const savedGroupsItems: FavoriteItem[] = savedGroups.map(
         (name: string) => ({
@@ -70,7 +62,27 @@ export function FavoritesModal({ isOpen, onClose }: FavoritesModalProps) {
 
       setFavorites([...savedGroupsItems, ...savedTeachersItems]);
     }
-  });
+  }, [isOpen, savedGroups, savedTeachers]);
+
+  // Manage body scroll when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      // Save current scroll position and prevent body scrolling
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+
+      return () => {
+        // Restore scroll position and body scrolling
+        const scrollY = parseInt(document.body.style.top || '0') * -1;
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isOpen]);
 
   const handleItemSelect = (item: FavoriteItem) => {
     if (item.type === 'group') {
@@ -91,6 +103,11 @@ export function FavoritesModal({ isOpen, onClose }: FavoritesModalProps) {
     } else {
       setSavedTeachers(savedTeachers.filter((t) => t !== item.name));
     }
+
+    // Update local favorites state
+    setFavorites(
+      favorites.filter((f) => !(f.name === item.name && f.type === item.type))
+    );
 
     const newNotifications = { ...notifications };
     delete newNotifications[itemKey];

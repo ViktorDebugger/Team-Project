@@ -1,16 +1,21 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode } from 'react';
+import { useLocalStorage } from '@/hooks';
 
 interface FiltersContextType {
   subgroup: string;
   weekType: string;
   classType: string;
   subjectSearch: string;
+  savedGroups: string[];
+  savedTeachers: string[];
   setSubgroup: (value: string) => void;
   setWeekType: (value: string) => void;
   setClassType: (value: string) => void;
   setSubjectSearch: (value: string) => void;
+  setSavedGroups: React.Dispatch<React.SetStateAction<string[]>>;
+  setSavedTeachers: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 const FiltersContext = createContext<FiltersContextType | undefined>(undefined);
@@ -24,6 +29,14 @@ export function FiltersProvider({ children }: FiltersProviderProps) {
   const [weekType, setWeekType] = useState('numerator');
   const [classType, setClassType] = useState('all');
   const [subjectSearch, setSubjectSearch] = useState('');
+  const [savedGroups, setSavedGroups] = useLocalStorage<string[]>(
+    'savedGroups',
+    []
+  );
+  const [savedTeachers, setSavedTeachers] = useLocalStorage<string[]>(
+    'savedTeachers',
+    []
+  );
 
   return (
     <FiltersContext.Provider
@@ -32,10 +45,14 @@ export function FiltersProvider({ children }: FiltersProviderProps) {
         weekType,
         classType,
         subjectSearch,
+        savedGroups,
+        savedTeachers,
         setSubgroup,
         setWeekType,
         setClassType,
         setSubjectSearch,
+        setSavedGroups,
+        setSavedTeachers,
       }}
     >
       {children}

@@ -50,6 +50,10 @@ interface SubstituteModalProps {
   day: string;
   subjectName: string;
   onUpdated: () => void;
+  substitutedClasses: SubstitutedClass[];
+  setSubstitutedClasses: React.Dispatch<
+    React.SetStateAction<SubstitutedClass[]>
+  >;
 }
 
 export function SubstituteModal({
@@ -59,13 +63,14 @@ export function SubstituteModal({
   day,
   subjectName,
   onUpdated,
+  substitutedClasses,
+  setSubstitutedClasses,
 }: SubstituteModalProps) {
   const [substituteTeacher, setSubstituteTeacher] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [substitutedClasses, setSubstitutedClasses] = useLocalStorage<SubstitutedClass[]>(SUBSTITUTED_CLASSES_KEY, []);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -88,6 +93,26 @@ export function SubstituteModal({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Manage body scroll when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      // Save current scroll position and prevent body scrolling
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+
+      return () => {
+        // Restore scroll position and body scrolling
+        const scrollY = parseInt(document.body.style.top || '0') * -1;
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isOpen]);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -131,9 +156,11 @@ export function SubstituteModal({
     );
 
     if (existingIndex >= 0) {
-      setSubstitutedClasses(substitutedClasses.map((c, i) =>
-        i === existingIndex ? newSubstitution : c
-      ));
+      setSubstitutedClasses(
+        substitutedClasses.map((c, i) =>
+          i === existingIndex ? newSubstitution : c
+        )
+      );
     } else {
       setSubstitutedClasses([...substitutedClasses, newSubstitution]);
     }
